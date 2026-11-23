@@ -62,7 +62,17 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 2. In **Settings → Pages**, choose **Deploy from a branch**, then `main` / `/(root)`.
 3. If the scheduled workflow cannot push, enable **Settings → Actions → General → Workflow permissions → Read and write**.
 
-Live URL: `https://michelevettone.github.io/moviesrc/`
+Live URL: `https://moviesrc.michelevettone.com/`
+
+### Cloudflare custom domain
+
+GitHub Pages remains the origin, but vixsrc/Cloudflare blocks the `github.io` Referer. `cloudflare/worker.js` is a small reverse proxy on `moviesrc.michelevettone.com` that serves the GitHub Pages site under the custom domain, so external links send an allowed Referer.
+
+```sh
+npx wrangler deploy --config cloudflare/wrangler.toml
+```
+
+The custom domain is declared in `cloudflare/wrangler.toml` and is created automatically by Wrangler.
 
 ## PWA
 
