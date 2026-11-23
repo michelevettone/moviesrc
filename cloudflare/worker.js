@@ -17,9 +17,43 @@ function redirectPage(target) {
   });
 }
 
+const CORS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, OPTIONS',
+  'access-control-allow-headers': 'content-type',
+};
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=86400', ...CORS },
+  });
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const incoming = new URL(request.url);
+
+    if (incoming.pathname.startsWith('/tmdb/movie/')) {
+      if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+      const id = incoming.pathname.split('/').pop();
+      if (!/^\d+$/.test(id)) return json({ error: 'invalid id' }, 400);
+      if (!env.TMDB_TOKEN) return json({ error: 'missing token' }, 500);
+      const lang = incoming.searchParams.get('lang') === 'en' ? 'en-US' : 'it-IT';
+      const response = await fetch(`https://api.themoviedb.org/3/movie/${id}?language=${lang}`, {
+        headers: { Authorization: `Bearer ${env.TMDB_TOKEN}` },
+        cf: { cacheTtl: 86400, cacheEverything: true },
+      });
+      if (!response.ok) return json({ error: 'upstream error' }, 502);
+      const data = await response.json();
+      return json({
+        overview: data.overview || '',
+        tagline: data.tagline || '',
+        runtime: data.runtime || null,
+        rating: data.vote_average || null,
+        genres: (data.genres || []).map(genre => genre.name),
+      });
+    }
 
     if (incoming.pathname === '/go' || incoming.pathname === '/go/') {
       const raw = incoming.searchParams.get('u');

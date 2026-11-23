@@ -13,6 +13,7 @@ Each TV show has an internal page with every available episode (`#tv/{tmdbId}`);
 
 - Bilingual UI (IT/EN) with localized titles, tabs, buttons, status messages and search.
 - Global search across movies and TV shows in the active catalog.
+- Internal movie detail pages (`#movie/{id}`) with localized plot, runtime and genres. Plot data is fetched on demand through the Cloudflare Worker.
 - Lists sorted by release date, newest first.
 - "Continue watching" carousel based on the last opened movies/episodes (stored in `localStorage`; no playback position yet). TV entries open the show page, highlight the last opened episode and offer a quick "resume from next episode" button.
 - Responsive card grid, poster overlays, lazy-free eager thumbnails at the correct size.
@@ -73,6 +74,12 @@ npx wrangler deploy --config cloudflare/wrangler.toml
 ```
 
 The custom domain is declared in `cloudflare/wrangler.toml` and is created automatically by Wrangler.
+
+The Worker also exposes `/tmdb/movie/{id}?lang=it|en` for on-demand localized plots. It needs a TMDB token as a Worker secret:
+
+```sh
+printf '%s' "$TMDB_TOKEN" | npx wrangler secret put TMDB_TOKEN --config cloudflare/wrangler.toml
+```
 
 ## PWA
 

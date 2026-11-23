@@ -198,6 +198,11 @@ body.detail-open .site-header, body.detail-open .footer { display: none; }
 }
 .resume.is-secondary:hover { border-color: var(--accent); color: var(--accent); filter: none; }
 .resume[hidden] { display: none; }
+.overview {
+  margin: 16px 0 0; max-width: 75ch;
+  color: var(--text); font-size: 14px; line-height: 1.65;
+}
+.overview[hidden] { display: none; }
 .season { margin-top: 28px; }
 .season h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 16px; }
 .season .count { color: var(--muted); font-size: 12px; font-weight: 400; }

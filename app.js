@@ -26,7 +26,10 @@ const I18N = {
     searchError: 'Errore di ricerca: ',
     enSoon: 'Catalogo inglese in preparazione. Riprova tra poco.',
     watch: '▶ Guarda ↗',
+    details: '▶ Dettagli',
     episodes: '▶ Episodi',
+    plotLoading: 'Caricamento trama…',
+    plotUnavailable: 'Trama non disponibile.',
     back: '← Torna al catalogo',
     more: 'Mostra altri',
     continueWatching: 'Continua a guardare',
@@ -62,7 +65,10 @@ const I18N = {
     searchError: 'Search error: ',
     enSoon: 'English catalog is being prepared. Try again shortly.',
     watch: '▶ Watch ↗',
+    details: '▶ Details',
     episodes: '▶ Episodes',
+    plotLoading: 'Loading plot…',
+    plotUnavailable: 'Plot unavailable.',
     back: '← Back to catalog',
     more: 'Show more',
     continueWatching: 'Continue watching',
@@ -109,8 +115,10 @@ const els = {
   detailTitle: document.getElementById('detail-title'),
   detailMeta: document.getElementById('detail-meta'),
   detailPoster: document.getElementById('detail-poster'),
+  detailWatch: document.getElementById('detail-watch'),
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
+  detailOverview: document.getElementById('detail-overview'),
   seasons: document.getElementById('seasons'),
 };
 
@@ -186,12 +194,7 @@ function remember(item) {
 }
 
 function recentHref(entry) {
-  if (entry.mediaType === 'movie') {
-    const url = entry.lang === 'it'
-      ? `https://${VIX}/movie/${entry.imdb_id || entry.tmdb_id}?lang=it`
-      : `https://${VIDSRC}/embed/movie/${entry.tmdb_id}`;
-    return externalLink(url);
-  }
+  if (entry.mediaType === 'movie') return `#movie/${entry.tmdb_id}`;
   return `#tv/${entry.tmdb_id}`;
 }
 
@@ -315,9 +318,8 @@ function card(item) {
   const el = document.createElement('article');
   el.className = 'card';
   const isTv = item.mediaType === 'tv';
-  const url = isTv ? providerUrl(item) : externalLink(providerUrl(item));
-  const poster = posterNode(item, url, !isTv);
-  if (!isTv) poster.addEventListener('click', () => remember(item));
+  const url = isTv ? `#tv/${item.tmdb_id}` : `#movie/${item.tmdb_id}`;
+  const poster = posterNode(item, url, false);
   el.append(poster);
 
   const top = document.createElement('div');
@@ -338,11 +340,6 @@ function card(item) {
   const title = document.createElement('h3');
   const titleLink = document.createElement('a');
   titleLink.href = url;
-  if (!isTv) {
-    titleLink.target = '_blank';
-    titleLink.rel = 'noopener noreferrer';
-    titleLink.referrerPolicy = 'no-referrer';
-  }
   titleLink.className = 'title-link';
   titleLink.textContent = label(item);
   title.append(titleLink);
@@ -350,17 +347,7 @@ function card(item) {
   const play = document.createElement('a');
   play.className = 'play';
   play.href = url;
-  if (!isTv) {
-    play.target = '_blank';
-    play.rel = 'noopener noreferrer';
-    play.referrerPolicy = 'no-referrer';
-  }
-  play.textContent = isTv ? t('episodes') : t('watch');
-
-  if (!isTv) {
-    titleLink.addEventListener('click', () => remember(item));
-    play.addEventListener('click', () => remember(item));
-  }
+  play.textContent = isTv ? t('episodes') : t('details');
 
   body.append(title, play);
   el.append(top, body);
@@ -482,7 +469,7 @@ function getEpisodes() {
 }
 
 async function showDetail(id) {
-  state.detailId = id;
+  state.detailId = `tv:${id}`;
   document.body.classList.add('detail-open');
   els.catalog.hidden = true;
   els.detail.hidden = false;
@@ -490,6 +477,11 @@ async function showDetail(id) {
   els.detailMeta.textContent = '';
   els.detailPoster.replaceChildren();
   els.detailPoster.classList.remove('is-empty');
+  els.detailWatch.hidden = true;
+  els.detailWatch.removeAttribute('href');
+  els.detailWatch.onclick = null;
+  els.detailOverview.hidden = true;
+  els.detailOverview.textContent = '';
   els.detailLast.hidden = true;
   els.detailLast.removeAttribute('href');
   els.detailLast.textContent = '';
@@ -642,6 +634,70 @@ async function showDetail(id) {
   }
 }
 
+async function showMovieDetail(id) {
+  const movieKey = `movie:${id}`;
+  state.detailId = movieKey;
+  document.body.classList.add('detail-open');
+  els.catalog.hidden = true;
+  els.detail.hidden = false;
+  els.detailTitle.textContent = t('detailLoading');
+  els.detailMeta.textContent = '';
+  els.detailPoster.replaceChildren();
+  els.detailPoster.classList.remove('is-empty');
+  els.detailWatch.hidden = true;
+  els.detailWatch.removeAttribute('href');
+  els.detailWatch.onclick = null;
+  els.detailLast.hidden = true;
+  els.detailResume.hidden = true;
+  els.detailOverview.hidden = true;
+  els.detailOverview.textContent = '';
+  els.seasons.replaceChildren();
+  window.scrollTo({ top: 0 });
+
+  try {
+    const movies = await getCatalog('movie');
+    if (state.detailId !== movieKey) return;
+    const item = movies.find(movie => String(movie.tmdb_id) === id) || null;
+    const title = item && item.title ? item.title : t('untitled');
+    document.title = `${title} — moviesrc`;
+    els.detailTitle.textContent = title;
+    els.detailMeta.textContent = item && item.year ? item.year : '';
+
+    if (item && item.poster) {
+      const img = document.createElement('img');
+      img.src = `${IMG_DETAIL}${item.poster}`;
+      img.alt = title;
+      els.detailPoster.append(img);
+    } else {
+      els.detailPoster.textContent = '▶';
+      els.detailPoster.classList.add('is-empty');
+    }
+
+    if (item) {
+      els.detailWatch.hidden = false;
+      els.detailWatch.href = externalLink(providerUrl(item));
+      els.detailWatch.textContent = t('watch');
+      els.detailWatch.onclick = () => remember(item);
+    }
+
+    els.detailOverview.hidden = false;
+    els.detailOverview.textContent = t('plotLoading');
+
+    const response = await fetch(`https://moviesrc.michelevettone.com/tmdb/movie/${id}?lang=${state.lang}`);
+    if (state.detailId !== movieKey) return;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const meta = [item && item.year, data.runtime ? `${data.runtime} min` : '', (data.genres || []).join(', ')]
+      .filter(Boolean).join(' · ');
+    if (meta) els.detailMeta.textContent = meta;
+    els.detailOverview.textContent = data.overview || t('plotUnavailable');
+  } catch (error) {
+    if (state.detailId !== movieKey) return;
+    els.detailOverview.hidden = false;
+    els.detailOverview.textContent = t('plotUnavailable');
+  }
+}
+
 function showCatalog(restore = true) {
   state.detailId = null;
   document.body.classList.remove('detail-open');
@@ -652,9 +708,14 @@ function showCatalog(restore = true) {
 }
 
 function route() {
-  const match = location.hash.match(/^#tv\/(\d+)$/);
-  if (match) {
-    showDetail(match[1]);
+  const show = location.hash.match(/^#tv\/(\d+)$/);
+  if (show) {
+    showDetail(show[1]);
+    return;
+  }
+  const movie = location.hash.match(/^#movie\/(\d+)$/);
+  if (movie) {
+    showMovieDetail(movie[1]);
     return;
   }
   showCatalog();
@@ -777,7 +838,7 @@ if (new URLSearchParams(location.search).get('reset') === '1') {
 
 applyI18n();
 window.addEventListener('hashchange', route);
-if (location.hash.startsWith('#tv/')) route();
+if (location.hash.startsWith('#tv/') || location.hash.startsWith('#movie/')) route();
 else load('movie');
 
 if ('serviceWorker' in navigator) {
