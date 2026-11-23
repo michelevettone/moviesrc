@@ -187,9 +187,10 @@ function remember(item) {
 
 function recentHref(entry) {
   if (entry.mediaType === 'movie') {
-    return entry.lang === 'it'
+    const url = entry.lang === 'it'
       ? `https://${VIX}/movie/${entry.imdb_id || entry.tmdb_id}?lang=it`
       : `https://${VIDSRC}/embed/movie/${entry.tmdb_id}`;
+    return externalLink(url);
   }
   return `#tv/${entry.tmdb_id}`;
 }
@@ -252,6 +253,16 @@ function episodeUrl(showId, season, episode) {
     : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
 }
 
+const REDIRECT = 'https://moviesrc.michelevettone.com/go?u=';
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+function externalLink(url) {
+  return isStandalone() ? REDIRECT + encodeURIComponent(url) : url;
+}
+
 function label(item) {
   return item.title || t('untitled');
 }
@@ -298,7 +309,7 @@ function card(item) {
   const el = document.createElement('article');
   el.className = 'card';
   const isTv = item.mediaType === 'tv';
-  const url = providerUrl(item);
+  const url = isTv ? providerUrl(item) : externalLink(providerUrl(item));
   const poster = posterNode(item, url, !isTv);
   if (!isTv) poster.addEventListener('click', () => remember(item));
   el.append(poster);
@@ -538,13 +549,13 @@ async function showDetail(id) {
 
       els.detailLast.hidden = !current;
       if (current) {
-        els.detailLast.href = episodeUrl(id, current.s, current.e);
+        els.detailLast.href = externalLink(episodeUrl(id, current.s, current.e));
         els.detailLast.textContent = t('resumeLast').replace('{ep}', badge(current));
       }
 
       els.detailResume.hidden = !next;
       if (next) {
-        els.detailResume.href = episodeUrl(id, next.s, next.e);
+        els.detailResume.href = externalLink(episodeUrl(id, next.s, next.e));
         els.detailResume.textContent = t('resumeNext').replace('{ep}', badge(next));
       }
     }
@@ -585,7 +596,7 @@ async function showDetail(id) {
       for (const episode of list) {
         const link = document.createElement('a');
         link.className = 'episode';
-        link.href = episodeUrl(id, episode.s, episode.e);
+        link.href = externalLink(episodeUrl(id, episode.s, episode.e));
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.referrerPolicy = 'no-referrer';
