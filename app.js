@@ -36,6 +36,7 @@ const I18N = {
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
     playTrailer: 'Riproduci trailer',
+    enableAudio: 'Attiva audio',
     episodes: '▶ Episodi',
     plotLoading: 'Caricamento trama…',
     plotUnavailable: 'Trama non disponibile.',
@@ -82,6 +83,7 @@ const I18N = {
     details: '▶ Details',
     trailer: '▶ Trailer',
     playTrailer: 'Play trailer',
+    enableAudio: 'Enable audio',
     episodes: '▶ Episodes',
     plotLoading: 'Loading plot…',
     plotUnavailable: 'Plot unavailable.',
@@ -140,6 +142,7 @@ const els = {
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
   detailTrailerPoster: document.getElementById('detail-trailer-poster'),
   detailTrailerImage: document.getElementById('detail-trailer-image'),
+  trailerAudio: document.getElementById('trailer-audio'),
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
   detailOverview: document.getElementById('detail-overview'),
@@ -424,8 +427,11 @@ function card(item) {
 }
 
 let trailerFrame = null;
+let trailerAudioTimer = null;
 
 function removeTrailerFrame() {
+  clearTimeout(trailerAudioTimer);
+  els.trailerAudio.hidden = true;
   if (trailerFrame) {
     trailerFrame.remove();
     trailerFrame = null;
@@ -862,7 +868,7 @@ els.detailTrailerPoster.addEventListener('click', () => {
   if (!key) return;
   removeTrailerFrame();
   const origin = encodeURIComponent(location.origin);
-  const player = `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&mute=1&playsinline=1&rel=0&origin=${origin}`;
+  const player = `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&mute=1&enablejsapi=1&playsinline=1&rel=0&origin=${origin}`;
   trailerFrame = document.createElement('iframe');
   trailerFrame.title = 'Trailer';
   trailerFrame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
@@ -872,6 +878,19 @@ els.detailTrailerPoster.addEventListener('click', () => {
   trailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
   els.detailTrailerWrap.append(trailerFrame);
   els.detailTrailerPoster.hidden = true;
+  trailerAudioTimer = setTimeout(() => {
+    if (trailerFrame) els.trailerAudio.hidden = false;
+  }, 1200);
+});
+
+els.trailerAudio.addEventListener('click', () => {
+  if (!trailerFrame) return;
+  const command = (func, args = []) => trailerFrame.contentWindow.postMessage(
+    JSON.stringify({ event: 'command', func, args }), '*');
+  command('unMute');
+  command('setVolume', [100]);
+  command('playVideo');
+  els.trailerAudio.hidden = true;
 });
 
 function updateSearchClear() {
