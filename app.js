@@ -13,7 +13,6 @@ const els = {
   detailTitle: document.getElementById('detail-title'),
   detailMeta: document.getElementById('detail-meta'),
   detailPoster: document.getElementById('detail-poster'),
-  detailLinks: document.getElementById('detail-links'),
   seasons: document.getElementById('seasons'),
 };
 
@@ -107,23 +106,6 @@ function card(item) {
   titleLink.textContent = label(item);
   title.append(titleLink);
 
-  const links = document.createElement('div');
-  links.className = 'card-links';
-  const tmdb = document.createElement('a');
-  tmdb.href = `https://www.themoviedb.org/${isTv ? 'tv' : 'movie'}/${item.tmdb_id}`;
-  tmdb.target = '_blank';
-  tmdb.rel = 'noopener noreferrer';
-  tmdb.textContent = 'TMDB ↗';
-  links.append(tmdb);
-  if (item.imdb_id) {
-    const imdb = document.createElement('a');
-    imdb.href = `https://www.imdb.com/title/${item.imdb_id}/`;
-    imdb.target = '_blank';
-    imdb.rel = 'noopener noreferrer';
-    imdb.textContent = 'IMDb ↗';
-    links.append(imdb);
-  }
-
   const play = document.createElement('a');
   play.className = 'play';
   play.href = url;
@@ -133,7 +115,7 @@ function card(item) {
   }
   play.textContent = isTv ? '▶ Episodi' : '▶ Guarda ↗';
 
-  body.append(top, title, links, play);
+  body.append(top, title, play);
   el.append(body);
   return el;
 }
@@ -216,7 +198,6 @@ async function showDetail(id) {
   els.detailMeta.textContent = '';
   els.detailPoster.replaceChildren();
   els.detailPoster.classList.remove('is-empty');
-  els.detailLinks.replaceChildren();
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -237,13 +218,6 @@ async function showDetail(id) {
       els.detailPoster.textContent = '▶';
       els.detailPoster.classList.add('is-empty');
     }
-
-    const tmdb = document.createElement('a');
-    tmdb.href = `https://www.themoviedb.org/tv/${id}`;
-    tmdb.target = '_blank';
-    tmdb.rel = 'noopener noreferrer';
-    tmdb.textContent = 'TMDB ↗';
-    els.detailLinks.append(tmdb);
 
     const episodes = rows
       .filter(row => String(row[0]) === id)
