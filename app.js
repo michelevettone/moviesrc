@@ -488,7 +488,7 @@ async function showDetail(id) {
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
   els.detailTrailerWrap.hidden = true;
-  els.detailTrailerFrame.src = 'about:blank';
+  els.detailTrailerFrame.srcdoc = '';
   els.detailLast.hidden = true;
   els.detailLast.removeAttribute('href');
   els.detailLast.textContent = '';
@@ -659,7 +659,7 @@ async function showMovieDetail(id) {
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
   els.detailTrailerWrap.hidden = true;
-  els.detailTrailerFrame.src = 'about:blank';
+  els.detailTrailerFrame.srcdoc = '';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -702,7 +702,8 @@ async function showMovieDetail(id) {
     els.detailOverview.textContent = data.overview || t('plotUnavailable');
     if (data.trailer && data.trailer.key && data.trailer.official) {
       const origin = encodeURIComponent(location.origin);
-      els.detailTrailerFrame.src = `https://www.youtube-nocookie.com/embed/${data.trailer.key}?playsinline=1&rel=0&origin=${origin}`;
+      const player = `https://www.youtube-nocookie.com/embed/${data.trailer.key}?playsinline=1&rel=0&origin=${origin}`;
+      els.detailTrailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
       els.detailTrailerWrap.hidden = false;
     }
   } catch (error) {
@@ -715,6 +716,8 @@ async function showMovieDetail(id) {
 function showCatalog(restore = true) {
   state.detailId = null;
   state.routeHash = location.hash;
+  els.detailTrailerFrame.srcdoc = '';
+  els.detailTrailerWrap.hidden = true;
   document.body.classList.remove('detail-open');
   els.detail.hidden = true;
   els.catalog.hidden = false;
