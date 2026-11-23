@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=28">
+  <link rel="stylesheet" href="styles.css?v=29">
 </head>
 <body>
   <header class="site-header">
@@ -85,6 +85,9 @@
           <p id="detail-overview" class="overview" hidden></p>
         </div>
       </div>
+      <div id="detail-trailer-wrap" class="trailer" hidden>
+        <iframe id="detail-trailer-frame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>
+      </div>
       <div id="seasons"></div>
     </section>
   </main>
@@ -95,6 +98,6 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=35"></script>
+  <script src="app.js?v=37"></script>
 </body>
 </html>

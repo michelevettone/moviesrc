@@ -27,6 +27,7 @@ const I18N = {
     enSoon: 'Catalogo inglese in preparazione. Riprova tra poco.',
     watch: '▶ Guarda ↗',
     details: '▶ Dettagli',
+    trailer: '▶ Trailer',
     episodes: '▶ Episodi',
     plotLoading: 'Caricamento trama…',
     plotUnavailable: 'Trama non disponibile.',
@@ -66,6 +67,7 @@ const I18N = {
     enSoon: 'English catalog is being prepared. Try again shortly.',
     watch: '▶ Watch ↗',
     details: '▶ Details',
+    trailer: '▶ Trailer',
     episodes: '▶ Episodes',
     plotLoading: 'Loading plot…',
     plotUnavailable: 'Plot unavailable.',
@@ -116,6 +118,8 @@ const els = {
   detailMeta: document.getElementById('detail-meta'),
   detailPoster: document.getElementById('detail-poster'),
   detailWatch: document.getElementById('detail-watch'),
+  detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
+  detailTrailerFrame: document.getElementById('detail-trailer-frame'),
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
   detailOverview: document.getElementById('detail-overview'),
@@ -482,6 +486,8 @@ async function showDetail(id) {
   els.detailWatch.onclick = null;
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
+  els.detailTrailerWrap.hidden = true;
+  els.detailTrailerFrame.src = 'about:blank';
   els.detailLast.hidden = true;
   els.detailLast.removeAttribute('href');
   els.detailLast.textContent = '';
@@ -651,6 +657,8 @@ async function showMovieDetail(id) {
   els.detailResume.hidden = true;
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
+  els.detailTrailerWrap.hidden = true;
+  els.detailTrailerFrame.src = 'about:blank';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -691,6 +699,10 @@ async function showMovieDetail(id) {
       .filter(Boolean).join(' · ');
     if (meta) els.detailMeta.textContent = meta;
     els.detailOverview.textContent = data.overview || t('plotUnavailable');
+    if (data.trailer && data.trailer.key) {
+      els.detailTrailerFrame.src = `https://www.youtube-nocookie.com/embed/${data.trailer.key}`;
+      els.detailTrailerWrap.hidden = false;
+    }
   } catch (error) {
     if (state.detailId !== movieKey) return;
     els.detailOverview.hidden = false;

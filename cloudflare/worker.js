@@ -40,18 +40,24 @@ export default {
       if (!/^\d+$/.test(id)) return json({ error: 'invalid id' }, 400);
       if (!env.TMDB_TOKEN) return json({ error: 'missing token' }, 500);
       const lang = incoming.searchParams.get('lang') === 'en' ? 'en-US' : 'it-IT';
-      const response = await fetch(`https://api.themoviedb.org/3/movie/${id}?language=${lang}`, {
+      const response = await fetch(`https://api.themoviedb.org/3/movie/${id}?language=${lang}&append_to_response=videos`, {
         headers: { Authorization: `Bearer ${env.TMDB_TOKEN}` },
         cf: { cacheTtl: 86400, cacheEverything: true },
       });
       if (!response.ok) return json({ error: 'upstream error' }, 502);
       const data = await response.json();
+      const videos = (data.videos && data.videos.results ? data.videos.results : []).filter(video => video.site === 'YouTube');
+      const trailer = videos.find(video => video.type === 'Trailer' && video.official)
+        || videos.find(video => video.type === 'Trailer')
+        || videos.find(video => video.type === 'Teaser')
+        || null;
       return json({
         overview: data.overview || '',
         tagline: data.tagline || '',
         runtime: data.runtime || null,
         rating: data.vote_average || null,
         genres: (data.genres || []).map(genre => genre.name),
+        trailer: trailer ? { key: trailer.key, name: trailer.name } : null,
       });
     }
 
