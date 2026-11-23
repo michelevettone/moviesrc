@@ -28,7 +28,6 @@ const I18N = {
     watch: '▶ Guarda ↗',
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
-    watchOnYouTube: 'Guarda su YouTube ↗',
     episodes: '▶ Episodi',
     plotLoading: 'Caricamento trama…',
     plotUnavailable: 'Trama non disponibile.',
@@ -69,7 +68,6 @@ const I18N = {
     watch: '▶ Watch ↗',
     details: '▶ Details',
     trailer: '▶ Trailer',
-    watchOnYouTube: 'Watch on YouTube ↗',
     episodes: '▶ Episodes',
     plotLoading: 'Loading plot…',
     plotUnavailable: 'Plot unavailable.',
@@ -122,7 +120,6 @@ const els = {
   detailWatch: document.getElementById('detail-watch'),
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
   detailTrailerFrame: document.getElementById('detail-trailer-frame'),
-  detailTrailerLink: document.getElementById('detail-trailer-link'),
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
   detailOverview: document.getElementById('detail-overview'),
@@ -491,9 +488,6 @@ async function showDetail(id) {
   els.detailOverview.textContent = '';
   els.detailTrailerWrap.hidden = true;
   els.detailTrailerFrame.src = 'about:blank';
-  els.detailTrailerLink.hidden = true;
-  els.detailTrailerLink.removeAttribute('href');
-  els.detailTrailerLink.textContent = '';
   els.detailLast.hidden = true;
   els.detailLast.removeAttribute('href');
   els.detailLast.textContent = '';
@@ -665,9 +659,6 @@ async function showMovieDetail(id) {
   els.detailOverview.textContent = '';
   els.detailTrailerWrap.hidden = true;
   els.detailTrailerFrame.src = 'about:blank';
-  els.detailTrailerLink.hidden = true;
-  els.detailTrailerLink.removeAttribute('href');
-  els.detailTrailerLink.textContent = '';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -708,16 +699,10 @@ async function showMovieDetail(id) {
       .filter(Boolean).join(' · ');
     if (meta) els.detailMeta.textContent = meta;
     els.detailOverview.textContent = data.overview || t('plotUnavailable');
-    if (data.trailer && data.trailer.key) {
-      const url = `https://www.youtube.com/watch?v=${data.trailer.key}`;
-      els.detailTrailerLink.href = url;
-      els.detailTrailerLink.textContent = t('watchOnYouTube');
-      els.detailTrailerLink.hidden = false;
-      if (data.trailer.official) {
-        const origin = encodeURIComponent(location.origin);
-        els.detailTrailerFrame.src = `https://www.youtube-nocookie.com/embed/${data.trailer.key}?playsinline=1&rel=0&origin=${origin}`;
-        els.detailTrailerWrap.hidden = false;
-      }
+    if (data.trailer && data.trailer.key && data.trailer.official) {
+      const origin = encodeURIComponent(location.origin);
+      els.detailTrailerFrame.src = `https://www.youtube-nocookie.com/embed/${data.trailer.key}?playsinline=1&rel=0&origin=${origin}`;
+      els.detailTrailerWrap.hidden = false;
     }
   } catch (error) {
     if (state.detailId !== movieKey) return;
@@ -777,6 +762,16 @@ document.addEventListener('click', event => {
   }
 
   location.href = href.replace(/^https:/, 'googlechromes:');
+});
+
+els.back.addEventListener('click', event => {
+  event.preventDefault();
+  if (history.length > 1) {
+    history.back();
+  } else {
+    history.replaceState(null, '', location.pathname + location.search);
+    showCatalog(false);
+  }
 });
 
 els.langButton.addEventListener('click', event => {
