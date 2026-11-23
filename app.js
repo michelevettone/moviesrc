@@ -418,12 +418,16 @@ async function getCatalog(type) {
   return items;
 }
 
-async function load(type) {
+async function load(type, { keep = false } = {}) {
   const token = ++state.loadSeq;
   state.type = type;
   state.shown = PAGE_SIZE;
-  state.items = [];
-  showLoading(true);
+  if (keep && state.items.length) {
+    els.more.hidden = true;
+  } else {
+    state.items = [];
+    showLoading(true);
+  }
   try {
     const items = await getCatalog(type);
     if (token !== state.loadSeq) return;
@@ -569,6 +573,7 @@ function route() {
 
 async function setLang(lang) {
   if (lang === state.lang) return;
+  const keepCatalog = state.items.length > 0;
   state.lang = lang;
   try { localStorage.setItem(LANG_KEY, lang); } catch {}
   applyI18n();
@@ -578,7 +583,7 @@ async function setLang(lang) {
   state.shown = PAGE_SIZE;
   if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   showCatalog(false);
-  await load(state.type);
+  await load(state.type, { keep: keepCatalog });
 }
 
 els.langButton.addEventListener('click', event => {
