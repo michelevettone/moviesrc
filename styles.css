@@ -106,7 +106,15 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); 
 }
 .tab:hover { color: var(--text); }
 .tab.is-active { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
-.search input { width: min(380px, 100%); }
+.search { position: relative; }
+.search input { width: min(380px, 100%); padding-right: 42px; }
+.search-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer;
+}
+.search-clear:hover { color: var(--text); }
+.search-clear[hidden] { display: none; }
 
 .status { color: var(--muted); font-size: 13px; margin: 4px 0 16px; }
 .loading { display: grid; place-items: center; min-height: 50vh; }
@@ -204,11 +212,23 @@ body.detail-open .site-header, body.detail-open .footer { display: none; }
 }
 .overview[hidden] { display: none; }
 .trailer {
-  margin-top: 18px; aspect-ratio: 16 / 9; overflow: hidden;
+  position: relative; margin-top: 18px; aspect-ratio: 16 / 9; overflow: hidden;
   border-radius: 12px; background: #000; border: 1px solid var(--line);
 }
 .trailer[hidden] { display: none; }
 .trailer iframe { display: block; width: 100%; height: 100%; border: 0; }
+.trailer iframe[hidden] { display: none; }
+.trailer-poster {
+  position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0;
+  background: #000; cursor: pointer;
+}
+.trailer-poster[hidden] { display: none; }
+.trailer-poster img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: .8; }
+.trailer-play {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: #fff; font-size: 46px; background: rgba(0, 0, 0, .25);
+}
+.trailer-poster:hover .trailer-play { background: rgba(0, 0, 0, .4); }
 .season { margin-top: 28px; }
 .season h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 16px; }
 .season .count { color: var(--muted); font-size: 12px; font-weight: 400; }

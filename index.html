@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=31">
+  <link rel="stylesheet" href="styles.css?v=33">
 </head>
 <body>
   <header class="site-header">
@@ -57,6 +57,7 @@
         <label class="search">
           <span class="sr-only" data-i18n="searchLabel">Cerca per titolo</span>
           <input id="search" type="search" placeholder="Cerca un titolo…" data-i18n-placeholder="searchPlaceholder" enterkeyhint="search" autocapitalize="none" spellcheck="false" autocomplete="off">
+          <button id="search-clear" class="search-clear" type="button" aria-label="Cancella ricerca" data-i18n-aria="clearSearch" hidden>×</button>
         </label>
       </section>
 
@@ -86,7 +87,11 @@
       </div>
       <p id="detail-overview" class="overview" hidden></p>
       <div id="detail-trailer-wrap" class="trailer" hidden>
-        <iframe id="detail-trailer-frame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>
+        <button id="detail-trailer-poster" class="trailer-poster" type="button" data-i18n-aria="playTrailer">
+          <img id="detail-trailer-image" alt="">
+          <span class="trailer-play" aria-hidden="true">▶</span>
+        </button>
+        <iframe id="detail-trailer-frame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin" hidden></iframe>
       </div>
       <div id="seasons"></div>
     </section>
@@ -98,6 +103,6 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=44"></script>
+  <script src="app.js?v=46"></script>
 </body>
 </html>

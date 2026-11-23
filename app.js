@@ -14,6 +14,7 @@ const I18N = {
     tv: 'Serie TV',
     searchPlaceholder: 'Cerca un titolo…',
     searchLabel: 'Cerca per titolo',
+    clearSearch: 'Cancella ricerca',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
     results: 'risultati in film e serie',
@@ -28,6 +29,7 @@ const I18N = {
     watch: '▶ Guarda ↗',
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
+    playTrailer: 'Riproduci trailer',
     episodes: '▶ Episodi',
     plotLoading: 'Caricamento trama…',
     plotUnavailable: 'Trama non disponibile.',
@@ -54,6 +56,7 @@ const I18N = {
     tv: 'TV Shows',
     searchPlaceholder: 'Search a title…',
     searchLabel: 'Search by title',
+    clearSearch: 'Clear search',
     loading: 'Loading catalog…',
     searching: 'Searching…',
     results: 'results in movies and TV shows',
@@ -68,6 +71,7 @@ const I18N = {
     watch: '▶ Watch ↗',
     details: '▶ Details',
     trailer: '▶ Trailer',
+    playTrailer: 'Play trailer',
     episodes: '▶ Episodes',
     plotLoading: 'Loading plot…',
     plotUnavailable: 'Plot unavailable.',
@@ -105,6 +109,7 @@ const els = {
   langOptions: [...document.querySelectorAll('.lang-option')],
   langCurrent: document.getElementById('lang-current'),
   search: document.getElementById('search'),
+  searchClear: document.getElementById('search-clear'),
   status: document.getElementById('status'),
   results: document.getElementById('results'),
   more: document.getElementById('more'),
@@ -119,6 +124,8 @@ const els = {
   detailPoster: document.getElementById('detail-poster'),
   detailWatch: document.getElementById('detail-watch'),
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
+  detailTrailerPoster: document.getElementById('detail-trailer-poster'),
+  detailTrailerImage: document.getElementById('detail-trailer-image'),
   detailTrailerFrame: document.getElementById('detail-trailer-frame'),
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
@@ -153,6 +160,9 @@ function applyI18n() {
   }
   for (const el of document.querySelectorAll('[data-i18n-placeholder]')) {
     el.placeholder = t(el.dataset.i18nPlaceholder);
+  }
+  for (const el of document.querySelectorAll('[data-i18n-aria]')) {
+    el.setAttribute('aria-label', t(el.dataset.i18nAria));
   }
   els.langCurrent.textContent = state.lang.toUpperCase();
   for (const option of els.langOptions) {
@@ -359,6 +369,15 @@ function card(item) {
   return el;
 }
 
+function resetTrailer() {
+  els.detailTrailerWrap.hidden = true;
+  els.detailTrailerFrame.hidden = true;
+  els.detailTrailerFrame.srcdoc = '';
+  els.detailTrailerPoster.hidden = false;
+  els.detailTrailerImage.removeAttribute('src');
+  delete els.detailTrailerPoster.dataset.key;
+}
+
 function showLoading(on) {
   els.loading.hidden = !on;
   els.results.hidden = on;
@@ -487,8 +506,7 @@ async function showDetail(id) {
   els.detailWatch.onclick = null;
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
-  els.detailTrailerWrap.hidden = true;
-  els.detailTrailerFrame.srcdoc = '';
+  resetTrailer();
   els.detailLast.hidden = true;
   els.detailLast.removeAttribute('href');
   els.detailLast.textContent = '';
@@ -658,8 +676,7 @@ async function showMovieDetail(id) {
   els.detailResume.hidden = true;
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
-  els.detailTrailerWrap.hidden = true;
-  els.detailTrailerFrame.srcdoc = '';
+  resetTrailer();
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -701,9 +718,10 @@ async function showMovieDetail(id) {
     if (meta) els.detailMeta.textContent = meta;
     els.detailOverview.textContent = data.overview || t('plotUnavailable');
     if (data.trailer && data.trailer.key && data.trailer.official) {
-      const origin = encodeURIComponent(location.origin);
-      const player = `https://www.youtube-nocookie.com/embed/${data.trailer.key}?playsinline=1&rel=0&origin=${origin}`;
-      els.detailTrailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
+      els.detailTrailerImage.src = `https://img.youtube.com/vi/${data.trailer.key}/hqdefault.jpg`;
+      els.detailTrailerPoster.dataset.key = data.trailer.key;
+      els.detailTrailerPoster.hidden = false;
+      els.detailTrailerFrame.hidden = true;
       els.detailTrailerWrap.hidden = false;
     }
   } catch (error) {
@@ -716,8 +734,7 @@ async function showMovieDetail(id) {
 function showCatalog(restore = true) {
   state.detailId = null;
   state.routeHash = location.hash;
-  els.detailTrailerFrame.srcdoc = '';
-  els.detailTrailerWrap.hidden = true;
+  resetTrailer();
   document.body.classList.remove('detail-open');
   els.detail.hidden = true;
   els.catalog.hidden = false;
@@ -749,6 +766,7 @@ async function setLang(lang) {
   state.searchSeq++;
   state.query = '';
   els.search.value = '';
+  updateSearchClear();
   state.shown = PAGE_SIZE;
   if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   showCatalog(false);
@@ -779,6 +797,28 @@ document.addEventListener('click', event => {
   }
 
   location.href = href.replace(/^https:/, 'googlechromes:');
+});
+
+els.detailTrailerPoster.addEventListener('click', () => {
+  const key = els.detailTrailerPoster.dataset.key;
+  if (!key) return;
+  const origin = encodeURIComponent(location.origin);
+  const player = `https://www.youtube-nocookie.com/embed/${key}?playsinline=1&rel=0&origin=${origin}`;
+  els.detailTrailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
+  els.detailTrailerFrame.hidden = false;
+  els.detailTrailerPoster.hidden = true;
+});
+
+function updateSearchClear() {
+  els.searchClear.hidden = !els.search.value;
+}
+
+els.searchClear.addEventListener('click', event => {
+  event.preventDefault();
+  event.stopPropagation();
+  els.search.value = '';
+  els.search.dispatchEvent(new Event('input'));
+  els.search.focus();
 });
 
 els.back.addEventListener('click', event => {
@@ -820,6 +860,7 @@ els.tabs.forEach(tab => tab.addEventListener('click', () => {
   state.searchSeq++;
   state.query = '';
   els.search.value = '';
+  updateSearchClear();
   showCatalog(false);
   if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   load(tab.dataset.type);
@@ -833,6 +874,7 @@ els.search.addEventListener('keydown', event => {
 
 els.search.addEventListener('input', async () => {
   const token = ++state.searchSeq;
+  updateSearchClear();
   state.query = normalize(els.search.value).trim();
   state.shown = PAGE_SIZE;
   if (!state.query) {
@@ -876,6 +918,7 @@ if (new URLSearchParams(location.search).get('reset') === '1') {
   })();
 }
 
+updateSearchClear();
 applyI18n();
 window.addEventListener('hashchange', route);
 window.addEventListener('popstate', route);
