@@ -199,7 +199,7 @@ body.detail-open .site-header, body.detail-open .footer { display: none; }
 .resume.is-secondary:hover { border-color: var(--accent); color: var(--accent); filter: none; }
 .resume[hidden] { display: none; }
 .overview {
-  margin: 16px 0 0; max-width: 75ch;
+  margin: 18px 0 0; max-width: 900px;
   color: var(--text); font-size: 14px; line-height: 1.65;
 }
 .overview[hidden] { display: none; }
@@ -209,6 +209,12 @@ body.detail-open .site-header, body.detail-open .footer { display: none; }
 }
 .trailer[hidden] { display: none; }
 .trailer iframe { display: block; width: 100%; height: 100%; border: 0; }
+.trailer-link {
+  display: inline-block; margin-top: 10px; color: var(--accent-2);
+  font-size: 13px; text-decoration: none;
+}
+.trailer-link:hover { text-decoration: underline; }
+.trailer-link[hidden] { display: none; }
 .season { margin-top: 28px; }
 .season h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 16px; }
 .season .count { color: var(--muted); font-size: 12px; font-weight: 400; }

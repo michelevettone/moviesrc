@@ -57,7 +57,7 @@ export default {
         runtime: data.runtime || null,
         rating: data.vote_average || null,
         genres: (data.genres || []).map(genre => genre.name),
-        trailer: trailer ? { key: trailer.key, name: trailer.name } : null,
+        trailer: trailer ? { key: trailer.key, name: trailer.name, official: trailer.official === true } : null,
       });
     }
 
