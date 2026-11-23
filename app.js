@@ -713,8 +713,9 @@ async function showMovieDetail(id) {
       els.detailTrailerLink.href = url;
       els.detailTrailerLink.textContent = t('watchOnYouTube');
       els.detailTrailerLink.hidden = false;
-      if (data.trailer.official && !(isIOS() && isStandalone())) {
-        els.detailTrailerFrame.src = `https://www.youtube.com/embed/${data.trailer.key}`;
+      if (data.trailer.official) {
+        const origin = encodeURIComponent(location.origin);
+        els.detailTrailerFrame.src = `https://www.youtube-nocookie.com/embed/${data.trailer.key}?playsinline=1&rel=0&origin=${origin}`;
         els.detailTrailerWrap.hidden = false;
       }
     }
