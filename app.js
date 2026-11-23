@@ -82,7 +82,10 @@ function detectLang() {
 
 const els = {
   tabs: [...document.querySelectorAll('.tab')],
-  langButtons: [...document.querySelectorAll('.lang-btn')],
+  langButton: document.getElementById('lang-button'),
+  langMenu: document.getElementById('lang-menu'),
+  langOptions: [...document.querySelectorAll('.lang-option')],
+  langCurrent: document.getElementById('lang-current'),
   search: document.getElementById('search'),
   status: document.getElementById('status'),
   results: document.getElementById('results'),
@@ -123,11 +126,17 @@ function applyI18n() {
   for (const el of document.querySelectorAll('[data-i18n-placeholder]')) {
     el.placeholder = t(el.dataset.i18nPlaceholder);
   }
-  for (const button of els.langButtons) {
-    const active = button.dataset.lang === state.lang;
-    button.classList.toggle('is-active', active);
-    button.setAttribute('aria-pressed', String(active));
+  els.langCurrent.textContent = state.lang.toUpperCase();
+  for (const option of els.langOptions) {
+    const active = option.dataset.lang === state.lang;
+    option.classList.toggle('is-active', active);
+    option.setAttribute('aria-selected', String(active));
   }
+}
+
+function closeLangMenu() {
+  els.langMenu.hidden = true;
+  els.langButton.setAttribute('aria-expanded', 'false');
 }
 
 function providerUrl(item) {
@@ -446,7 +455,25 @@ async function setLang(lang) {
   await load(state.type);
 }
 
-els.langButtons.forEach(button => button.addEventListener('click', () => setLang(button.dataset.lang)));
+els.langButton.addEventListener('click', event => {
+  event.stopPropagation();
+  const open = els.langMenu.hidden;
+  els.langMenu.hidden = !open;
+  els.langButton.setAttribute('aria-expanded', String(open));
+});
+
+els.langOptions.forEach(option => option.addEventListener('click', () => {
+  closeLangMenu();
+  setLang(option.dataset.lang);
+}));
+
+document.addEventListener('click', event => {
+  if (!event.target.closest('.lang-select')) closeLangMenu();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeLangMenu();
+});
 
 els.tabs.forEach(tab => tab.addEventListener('click', () => {
   els.tabs.forEach(t => {

@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
   <header class="site-header">
@@ -25,9 +25,15 @@
           <p data-i18n="tagline">Catalogo film e serie TV: scegli un titolo e guardalo.</p>
         </div>
       </div>
-      <div class="lang-picker" role="group" aria-label="Lingua / Language">
-        <button class="lang-btn is-active" type="button" data-lang="it" aria-pressed="true">IT</button>
-        <button class="lang-btn" type="button" data-lang="en" aria-pressed="false">EN</button>
+      <div class="lang-select">
+        <button id="lang-button" class="lang-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Lingua / Language">
+          <span id="lang-current">IT</span>
+          <span class="lang-arrow" aria-hidden="true">▾</span>
+        </button>
+        <div id="lang-menu" class="lang-menu" role="listbox" aria-label="Lingua / Language" hidden>
+          <button class="lang-option is-active" type="button" role="option" data-lang="it" aria-selected="true">Italiano</button>
+          <button class="lang-option" type="button" role="option" data-lang="en" aria-selected="false">English</button>
+        </div>
       </div>
     </div>
   </header>
@@ -70,6 +76,6 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
