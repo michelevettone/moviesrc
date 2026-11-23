@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Esplora il catalogo vixsrc e apri film, serie e episodi con TMDB o IMDb ID.">
+  <title>moviesrc — catalogo e player vixsrc</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">▶</span>
+        <div>
+          <h1>moviesrc</h1>
+          <p>Catalogo vixsrc: scegli un tipo, cerca un ID e riproduci.</p>
+        </div>
+      </div>
+      <label class="domain-field">
+        <span>Embed domain</span>
+        <input id="domain" type="text" value="vixsrc.to" spellcheck="false" autocomplete="off" aria-describedby="domain-help">
+      </label>
+    </div>
+    <p id="domain-help" class="wrap sr-only">Dominio usato per gli URL di riproduzione. Se vixsrc.to è bloccato, inserisci qui il tuo dominio personalizzato autorizzato su vixsrc.</p>
+  </header>
+
+  <main class="wrap">
+    <section class="toolbar" aria-label="Filtri catalogo">
+      <div class="tabs" role="tablist" aria-label="Tipo di media">
+        <button class="tab is-active" role="tab" aria-selected="true" data-type="movie">Film</button>
+        <button class="tab" role="tab" aria-selected="false" data-type="tv">Serie TV</button>
+        <button class="tab" role="tab" aria-selected="false" data-type="episode">Episodi</button>
+      </div>
+      <label class="search">
+        <span class="sr-only">Cerca per TMDB o IMDb ID</span>
+        <input id="search" type="search" placeholder="Cerca TMDB ID, IMDb ID o S02E03…" autocomplete="off">
+      </label>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite">Caricamento catalogo…</p>
+
+    <section id="results" class="grid" aria-label="Risultati"></section>
+    <button id="more" class="more" type="button" hidden>Mostra altri</button>
+
+    <section id="player" class="player" hidden aria-label="Player">
+      <div class="player-head">
+        <div>
+          <h2 id="player-title">Player</h2>
+          <p id="player-sub" class="muted"></p>
+        </div>
+        <button id="close-player" class="ghost" type="button" aria-label="Chiudi player">✕</button>
+      </div>
+      <div class="frame-wrap"><iframe id="frame" title="Player vixsrc" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe></div>
+      <div class="player-actions">
+        <code id="player-url"></code>
+        <button id="copy-url" class="ghost" type="button">Copia link</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer">
+    <p>Catalogo aggiornato automaticamente ogni giorno da <code>https://vixsrc.to/api/list/{type}?lang=it</code>.</p>
+    <p>Gli ID provengono da TMDB / IMDb; il player è ospitato da vixsrc.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
