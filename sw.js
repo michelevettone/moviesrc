@@ -1,4 +1,4 @@
-const CACHE = 'moviesrc-v1';
+const CACHE = 'moviesrc-v2';
 const SHELL = ['./', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', event => {
@@ -19,10 +19,10 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (url.origin !== location.origin) return;
 
-  // HTML e JSON cambiano spesso: prima la rete, cache solo come fallback offline.
+  // HTML e JSON cambiano spesso: prima la rete (ignorando la cache HTTP), cache solo come fallback offline.
   if (request.mode === 'navigate' || url.pathname.includes('/data/')) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then(response => {
           if (response.ok) {
             const copy = response.clone();
