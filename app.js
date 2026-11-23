@@ -207,9 +207,9 @@ function closeSettings() {
 function browserScheme(url, browser) {
   if (browser === 'chrome') return url.replace(/^https:/, 'googlechromes:');
   if (browser === 'safari') return `x-safari-${url}`;
-  if (browser === 'brave') return `brave://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
-  if (browser === 'brave-beta') return `brave-beta://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
-  if (browser === 'firefox') return `firefox://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
+  if (browser === 'brave') return `brave://open-url?url=${encodeURIComponent(url)}`;
+  if (browser === 'brave-beta') return `brave-beta://open-url?url=${encodeURIComponent(url)}`;
+  if (browser === 'firefox') return `firefox://open-url?url=${encodeURIComponent(url)}`;
   if (browser === 'edge') return url.replace(/^https:/, 'microsoft-edge-https:');
   if (browser === 'wvc') return `wvc-x-callback://open?url=${encodeURIComponent(url)}`;
   return null;
