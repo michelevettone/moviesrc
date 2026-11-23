@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Esplora il catalogo vixsrc e apri film, serie e episodi con TMDB o IMDb ID.">
   <title>moviesrc — catalogo vixsrc</title>
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
   <header class="site-header">
@@ -14,34 +14,44 @@
         <span class="brand-mark" aria-hidden="true">▶</span>
         <div>
           <h1>moviesrc</h1>
-          <p>Catalogo vixsrc: scegli un tipo, cerca un ID e riproduci.</p>
+          <p>Catalogo vixsrc: scegli un tipo, cerca un titolo e riproduci.</p>
         </div>
       </div>
-      <label class="domain-field">
-        <span>Embed domain</span>
-        <input id="domain" type="text" value="vixsrc.to" spellcheck="false" autocomplete="off" aria-describedby="domain-help">
-      </label>
     </div>
-    <p id="domain-help" class="wrap sr-only">Dominio usato per i link di riproduzione. Se vixsrc.to è bloccato, inserisci qui il tuo dominio personalizzato autorizzato su vixsrc.</p>
   </header>
 
   <main class="wrap">
-    <section class="toolbar" aria-label="Filtri catalogo">
-      <div class="tabs" role="tablist" aria-label="Tipo di media">
-        <button class="tab is-active" role="tab" aria-selected="true" data-type="movie">Film</button>
-        <button class="tab" role="tab" aria-selected="false" data-type="tv">Serie TV</button>
-        <button class="tab" role="tab" aria-selected="false" data-type="episode">Episodi</button>
+    <div id="catalog">
+      <section class="toolbar" aria-label="Filtri catalogo">
+        <div class="tabs" role="tablist" aria-label="Tipo di media">
+          <button class="tab is-active" role="tab" aria-selected="true" data-type="movie">Film</button>
+          <button class="tab" role="tab" aria-selected="false" data-type="tv">Serie TV</button>
+          <button class="tab" role="tab" aria-selected="false" data-type="episode">Episodi</button>
+        </div>
+        <label class="search">
+          <span class="sr-only">Cerca per titolo, TMDB o IMDb ID</span>
+          <input id="search" type="search" placeholder="Cerca titolo, TMDB ID, IMDb ID o S02E03…" autocomplete="off">
+        </label>
+      </section>
+
+      <p id="status" class="status" role="status" aria-live="polite">Caricamento catalogo…</p>
+
+      <section id="results" class="grid" aria-label="Risultati"></section>
+      <button id="more" class="more" type="button" hidden>Mostra altri</button>
+    </div>
+
+    <section id="detail" class="detail" hidden aria-label="Dettaglio serie">
+      <a id="back" class="back" href="#">← Torna al catalogo</a>
+      <div class="detail-head">
+        <div id="detail-poster" class="detail-poster"></div>
+        <div class="detail-info">
+          <h1 id="detail-title"></h1>
+          <p id="detail-meta" class="muted"></p>
+          <div id="detail-links" class="card-links"></div>
+        </div>
       </div>
-      <label class="search">
-        <span class="sr-only">Cerca per TMDB o IMDb ID</span>
-        <input id="search" type="search" placeholder="Cerca titolo, TMDB ID, IMDb ID o S02E03…" autocomplete="off">
-      </label>
+      <div id="seasons"></div>
     </section>
-
-    <p id="status" class="status" role="status" aria-live="polite">Caricamento catalogo…</p>
-
-    <section id="results" class="grid" aria-label="Risultati"></section>
-    <button id="more" class="more" type="button" hidden>Mostra altri</button>
   </main>
 
   <footer class="wrap footer">
@@ -50,6 +60,6 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

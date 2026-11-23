@@ -1,6 +1,6 @@
 # moviesrc
 
-Sito statico per GitHub Pages che usa il catalogo vixsrc e apre film, serie ed episodi in una nuova scheda:
+Sito statico per GitHub Pages che usa il catalogo vixsrc. I film e i singoli episodi si aprono su vixsrc in una nuova scheda; ogni serie TV ha una pagina interna con tutti gli episodi (`#tv/{tmdbId}`):
 
 - `https://vixsrc.to/movie/{id}`
 - `https://vixsrc.to/tv/{id}/{season}/{episode}`
@@ -33,7 +33,3 @@ Questo prodotto usa le API TMDB ma non è approvato né certificato da TMDB.
 4. Abilita **Actions → Generic workflow permissions → Read and write** se il commit automatico viene rifiutato.
 
 URL finale: `https://michelevettone.github.io/moviesrc/`
-
-## Dominio embed personalizzato
-
-Il campo **Embed domain** in alto cambia l'host dei link generati (default `vixsrc.to`). Se usi la funzione *Custom embed domain* di vixsrc, aggiungi lì il dominio autorizzato; il valore viene salvato in localStorage. I link si aprono sempre in una nuova scheda.
