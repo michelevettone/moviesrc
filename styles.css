@@ -75,8 +75,7 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); 
 .recent h2 { margin: 0 0 10px; font-size: 15px; }
 .recent-track {
   display: flex; gap: 10px; overflow-x: auto;
-  margin: 0 -2px; padding: 2px 16px 6px 2px;
-  scroll-padding-inline: 2px;
+  margin: 0; padding: 2px 0 6px;
   scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
   scrollbar-width: none; -ms-overflow-style: none;
 }
@@ -172,7 +171,7 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); 
 }
 .more:hover { border-color: var(--accent-2); }
 
-body.detail-open .site-header { display: none; }
+body.detail-open .site-header, body.detail-open .footer { display: none; }
 .detail { padding-top: env(safe-area-inset-top); padding-bottom: 20px; }
 .back { display: inline-block; margin: 24px 0 18px; color: var(--muted); font-size: 13px; text-decoration: none; }
 .back:hover { color: var(--text); }
@@ -222,7 +221,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .toolbar { flex-direction: column-reverse; align-items: stretch; }
   .tabs { align-self: center; }
   .search input { width: 100%; }
-  .recent-card { flex-basis: 210px; }
+  .recent-card { flex-basis: calc(50% - 5px); }
   .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .detail-poster { width: 130px; }
 }
