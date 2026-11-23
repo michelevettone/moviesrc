@@ -16,7 +16,7 @@ Each TV show has an internal page with every available episode (`#tv/{tmdbId}`);
 - Internal movie detail pages (`#movie/{id}`) with localized plot, runtime, genres and an inline YouTube trailer when available. Detail data is fetched on demand through the Cloudflare Worker.
 - Lists sorted by release date, newest first.
 - "Continue watching" carousel based on the last opened movies/episodes (stored in `localStorage`; no playback position yet). TV entries open the show page, highlight the last opened episode and offer a quick "resume from next episode" button.
-- iOS browser picker (Chrome, Safari, Brave, Firefox, Edge, Web Video Cast or system browser) for external provider links, persisted in `localStorage`.
+- iOS browser picker (Chrome, Safari, Brave, Firefox, Edge, Web Video Cast or system browser) for external provider links, persisted in `localStorage`. It is shown only when the site runs as an installed iOS PWA.
 - Responsive card grid, poster overlays, lazy-free eager thumbnails at the correct size.
 - Installable PWA with service worker, manifest, icons and safe-area support.
 - `no-referrer` policy so vixsrc does not block navigation from GitHub Pages.

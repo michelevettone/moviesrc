@@ -327,6 +327,10 @@ function isIOS() {
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
 function externalLink(url) {
   return url;
 }
@@ -992,6 +996,9 @@ if (new URLSearchParams(location.search).get('reset') === '1') {
 }
 
 els.browserSelect.value = getBrowser();
+const showBrowserSetting = isIOS() && isStandalone();
+els.settingsButton.hidden = !showBrowserSetting;
+if (!showBrowserSetting) closeSettings();
 updateSearchClear();
 applyI18n();
 window.addEventListener('hashchange', route);
