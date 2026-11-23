@@ -30,6 +30,8 @@ const I18N = {
     back: '← Torna al catalogo',
     more: 'Mostra altri',
     continueWatching: 'Continua a guardare',
+    resumeNext: '▶ Riprendi da {ep}',
+    lastWatched: 'Ultimo aperto',
     detailLoading: 'Caricamento…',
     season: 'Stagione',
     episodeOne: '1 episodio',
@@ -63,6 +65,8 @@ const I18N = {
     back: '← Back to catalog',
     more: 'Show more',
     continueWatching: 'Continue watching',
+    resumeNext: '▶ Resume {ep}',
+    lastWatched: 'Last opened',
     detailLoading: 'Loading…',
     season: 'Season',
     episodeOne: '1 episode',
@@ -103,6 +107,7 @@ const els = {
   detailTitle: document.getElementById('detail-title'),
   detailMeta: document.getElementById('detail-meta'),
   detailPoster: document.getElementById('detail-poster'),
+  detailResume: document.getElementById('detail-resume'),
   seasons: document.getElementById('seasons'),
 };
 
@@ -183,8 +188,7 @@ function recentHref(entry) {
       ? `https://${VIX}/movie/${entry.imdb_id || entry.tmdb_id}?lang=it`
       : `https://${VIDSRC}/embed/movie/${entry.tmdb_id}`;
   }
-  if (!entry.s || !entry.e) return `#tv/${entry.tmdb_id}`;
-  return episodeUrl(entry.tmdb_id, entry.s, entry.e);
+  return `#tv/${entry.tmdb_id}`;
 }
 
 function recentCard(entry) {
@@ -461,6 +465,9 @@ async function showDetail(id) {
   els.detailMeta.textContent = '';
   els.detailPoster.replaceChildren();
   els.detailPoster.classList.remove('is-empty');
+  els.detailResume.hidden = true;
+  els.detailResume.removeAttribute('href');
+  els.detailResume.textContent = '';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -503,6 +510,42 @@ async function showDetail(id) {
       return;
     }
 
+    const previous = readRecent().find(entry =>
+      entry.lang === state.lang && entry.mediaType === 'tv' && String(entry.tmdb_id) === id);
+    let lastEpisode = previous && previous.s && previous.e
+      ? { s: Number(previous.s), e: Number(previous.e) }
+      : null;
+
+    function setResume(last) {
+      const index = last ? episodes.findIndex(episode => episode.s === last.s && episode.e === last.e) : -1;
+      const next = index >= 0 ? episodes[index + 1] : null;
+      els.detailResume.hidden = !next;
+      if (!next) {
+        els.detailResume.removeAttribute('href');
+        els.detailResume.textContent = '';
+        return;
+      }
+      const badge = `S${String(next.s).padStart(2, '0')}E${String(next.e).padStart(2, '0')}`;
+      els.detailResume.href = episodeUrl(id, next.s, next.e);
+      els.detailResume.textContent = t('resumeNext').replace('{ep}', badge);
+    }
+
+    function markCurrent(episode) {
+      for (const link of els.seasons.querySelectorAll('.episode.is-current')) {
+        link.classList.remove('is-current');
+        link.removeAttribute('aria-current');
+      }
+      if (!episode) return;
+      const link = els.seasons.querySelector(`.episode[data-s="${episode.s}"][data-e="${episode.e}"]`);
+      if (link) {
+        link.classList.add('is-current');
+        link.setAttribute('aria-current', 'true');
+        link.title = `${t('season')} ${episode.s} — E${episode.e} · ${t('lastWatched')}`;
+      }
+    }
+
+    setResume(lastEpisode);
+
     const seasons = new Map();
     for (const episode of episodes) {
       if (!seasons.has(episode.s)) seasons.set(episode.s, []);
@@ -529,16 +572,28 @@ async function showDetail(id) {
         link.textContent = `E${String(episode.e).padStart(2, '0')}`;
         link.title = `${t('season')} ${episode.s} — E${episode.e}`;
         link.setAttribute('aria-label', `${t('season')} ${episode.s} E${episode.e}`);
-        link.addEventListener('click', () => remember({
-          mediaType: 'tv',
-          tmdb_id: Number(id),
-          imdb_id: null,
-          title,
-          year: info && info.year ? info.year : '',
-          poster: info && info.poster ? info.poster : null,
-          s: episode.s,
-          e: episode.e,
-        }));
+        link.dataset.s = episode.s;
+        link.dataset.e = episode.e;
+        if (lastEpisode && lastEpisode.s === episode.s && lastEpisode.e === episode.e) {
+          link.classList.add('is-current');
+          link.setAttribute('aria-current', 'true');
+          link.title = `${t('season')} ${episode.s} — E${episode.e} · ${t('lastWatched')}`;
+        }
+        link.addEventListener('click', () => {
+          remember({
+            mediaType: 'tv',
+            tmdb_id: Number(id),
+            imdb_id: null,
+            title,
+            year: info && info.year ? info.year : '',
+            poster: info && info.poster ? info.poster : null,
+            s: episode.s,
+            e: episode.e,
+          });
+          lastEpisode = episode;
+          markCurrent(episode);
+          setResume(episode);
+        });
         grid.append(link);
       }
       section.append(heading, grid);

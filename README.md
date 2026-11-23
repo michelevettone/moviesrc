@@ -14,7 +14,7 @@ Each TV show has an internal page with every available episode (`#tv/{tmdbId}`);
 - Bilingual UI (IT/EN) with localized titles, tabs, buttons, status messages and search.
 - Global search across movies and TV shows in the active catalog.
 - Lists sorted by release date, newest first.
-- "Continue watching" carousel based on the last opened movies/episodes (stored in `localStorage`; no playback position yet).
+- "Continue watching" carousel based on the last opened movies/episodes (stored in `localStorage`; no playback position yet). TV entries open the show page, highlight the last opened episode and offer a quick "resume from next episode" button.
 - Responsive card grid, poster overlays, lazy-free eager thumbnails at the correct size.
 - Installable PWA with service worker, manifest, icons and safe-area support.
 - `no-referrer` policy so vixsrc does not block navigation from GitHub Pages.

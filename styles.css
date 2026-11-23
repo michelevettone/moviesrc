@@ -181,6 +181,13 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); 
 .detail-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .detail-info { flex: 1; min-width: 220px; padding-top: 4px; }
 .detail-info h1 { margin: 0 0 6px; font-size: clamp(24px, 4vw, 38px); letter-spacing: -.02em; }
+.resume {
+  display: inline-flex; align-items: center; margin-top: 12px; padding: 9px 13px;
+  border-radius: 9px; background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 700; text-decoration: none;
+}
+.resume:hover { filter: brightness(1.08); text-decoration: none; }
+.resume[hidden] { display: none; }
 .season { margin-top: 28px; }
 .season h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 16px; }
 .season .count { color: var(--muted); font-size: 12px; font-weight: 400; }
@@ -191,6 +198,10 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); 
   font-size: 13px; font-variant-numeric: tabular-nums;
 }
 .episode:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.episode.is-current {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(255, 107, 74, .12); box-shadow: inset 0 0 0 1px var(--accent);
+}
 
 .footer {
   border-top: 1px solid var(--line); margin-top: 34px; color: var(--muted); font-size: 12px;
