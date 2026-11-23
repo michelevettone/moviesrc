@@ -224,7 +224,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .toolbar { flex-direction: column-reverse; align-items: stretch; }
   .tabs { align-self: center; }
   .search input { width: 100%; }
-  .recent-card { flex-basis: calc(50% - 5px); }
+  .recent { margin-inline: calc(50% - 50vw); }
+  .recent h2 { padding-inline: 16px; }
+  .recent-track { padding-inline: 16px; scroll-padding-inline: 16px; }
+  .recent-card { flex-basis: calc(50% - 2px); }
   .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .detail-poster { width: 130px; }
 }
