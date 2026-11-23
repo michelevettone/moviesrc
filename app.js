@@ -327,3 +327,7 @@ els.more.addEventListener('click', () => {
 window.addEventListener('hashchange', route);
 if (location.hash.startsWith('#tv/')) route();
 else load('movie');
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}

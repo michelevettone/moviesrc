@@ -35,3 +35,7 @@ Questo prodotto usa le API TMDB ma non è approvato né certificato da TMDB.
 4. Abilita **Actions → Generic workflow permissions → Read and write** se il commit automatico viene rifiutato.
 
 URL finale: `https://michelevettone.github.io/moviesrc/`
+
+## PWA
+
+Il sito è installabile: `manifest.webmanifest`, service worker (`sw.js`) e icone in `icons/`. Su Android/Chrome usa “Installa app” o il menu → “Aggiungi alla schermata Home”; su iPhone Safari usa Condividi → “Aggiungi alla schermata Home”.
