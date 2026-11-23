@@ -862,7 +862,7 @@ els.detailTrailerPoster.addEventListener('click', () => {
   if (!key) return;
   removeTrailerFrame();
   const origin = encodeURIComponent(location.origin);
-  const player = `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&playsinline=1&rel=0&origin=${origin}`;
+  const player = `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&mute=1&playsinline=1&rel=0&origin=${origin}`;
   trailerFrame = document.createElement('iframe');
   trailerFrame.title = 'Trailer';
   trailerFrame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
