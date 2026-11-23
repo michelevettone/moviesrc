@@ -6,7 +6,7 @@ const VIDSRC = 'vidsrc.sh';
 const LANG_KEY = 'moviesrc-lang';
 const RECENT_KEY = 'moviesrc-recent';
 const BROWSER_KEY = 'moviesrc-browser';
-const BROWSERS = new Set(['chrome', 'safari', 'brave', 'firefox', 'edge', 'wvc', 'system']);
+const BROWSERS = new Set(['chrome', 'safari', 'brave', 'brave-beta', 'firefox', 'edge', 'wvc', 'system']);
 
 const I18N = {
   it: {
@@ -208,6 +208,7 @@ function browserScheme(url, browser) {
   if (browser === 'chrome') return url.replace(/^https:/, 'googlechromes:');
   if (browser === 'safari') return `x-safari-${url}`;
   if (browser === 'brave') return `brave://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
+  if (browser === 'brave-beta') return `brave-beta://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
   if (browser === 'firefox') return `firefox://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
   if (browser === 'edge') return url.replace(/^https:/, 'microsoft-edge-https:');
   if (browser === 'wvc') return `wvc-x-callback://open?url=${encodeURIComponent(url)}`;
