@@ -6,16 +6,9 @@ const els = {
   results: document.getElementById('results'),
   more: document.getElementById('more'),
   domain: document.getElementById('domain'),
-  player: document.getElementById('player'),
-  playerTitle: document.getElementById('player-title'),
-  playerSub: document.getElementById('player-sub'),
-  frame: document.getElementById('frame'),
-  playerUrl: document.getElementById('player-url'),
-  close: document.getElementById('close-player'),
-  copy: document.getElementById('copy-url'),
 };
 
-const state = { type: 'movie', query: '', shown: PAGE_SIZE, cache: {}, items: [], current: null };
+const state = { type: 'movie', query: '', shown: PAGE_SIZE, cache: {}, items: [] };
 
 function embedDomain() {
   const raw = els.domain.value.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
@@ -56,7 +49,13 @@ function card(item) {
   kind.className = 'kind';
   kind.textContent = state.type === 'movie' ? 'Film' : state.type === 'tv' ? 'Serie' : 'Episodio';
   const title = document.createElement('h3');
-  title.textContent = label(item);
+  const titleLink = document.createElement('a');
+  titleLink.href = embedUrl(item);
+  titleLink.target = '_blank';
+  titleLink.rel = 'noopener noreferrer';
+  titleLink.className = 'title-link';
+  titleLink.textContent = label(item);
+  title.append(titleLink);
   top.append(kind, title);
 
   const meta = document.createElement('p');
@@ -82,11 +81,12 @@ function card(item) {
     links.append(imdb);
   }
 
-  const play = document.createElement('button');
+  const play = document.createElement('a');
   play.className = 'play';
-  play.type = 'button';
-  play.textContent = '▶ Guarda';
-  play.addEventListener('click', () => openPlayer(item));
+  play.href = embedUrl(item);
+  play.target = '_blank';
+  play.rel = 'noopener noreferrer';
+  play.textContent = '▶ Guarda ↗';
 
   el.append(top, meta, links, play);
   return el;
@@ -126,22 +126,6 @@ async function load(type) {
   }
 }
 
-function openPlayer(item) {
-  state.current = item;
-  els.playerTitle.textContent = label(item);
-  els.playerSub.textContent = state.type === 'episode' ? `TMDB ${item.tmdb_id} · S${item.s}E${item.e}` : `TMDB ${item.tmdb_id}${item.imdb_id ? ` · ${item.imdb_id}` : ''}`;
-  els.player.hidden = false;
-  updateFrame();
-  els.player.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function updateFrame() {
-  if (!state.current) return;
-  const url = embedUrl(state.current);
-  els.frame.src = url;
-  els.playerUrl.textContent = url;
-}
-
 els.tabs.forEach(tab => tab.addEventListener('click', () => {
   els.tabs.forEach(t => {
     const active = t === tab;
@@ -162,24 +146,12 @@ els.more.addEventListener('click', () => {
   render();
 });
 
-els.domain.addEventListener('change', updateFrame);
-els.close.addEventListener('click', () => {
-  els.player.hidden = true;
-  els.frame.src = 'about:blank';
-  state.current = null;
-});
-els.copy.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(els.playerUrl.textContent);
-    els.copy.textContent = 'Copiato!';
-    setTimeout(() => { els.copy.textContent = 'Copia link'; }, 1500);
-  } catch {
-    els.copy.textContent = 'Copia manualmente';
-  }
-});
-
 const savedDomain = localStorage.getItem('moviesrc-domain');
 if (savedDomain) els.domain.value = savedDomain;
-els.domain.addEventListener('change', () => localStorage.setItem('moviesrc-domain', els.domain.value.trim()));
+els.domain.addEventListener('change', () => {
+  const domain = els.domain.value.trim();
+  localStorage.setItem('moviesrc-domain', domain);
+  render();
+});
 
 load('movie');

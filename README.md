@@ -1,6 +1,6 @@
 # moviesrc
 
-Sito statico per GitHub Pages che espone le API vixsrc:
+Sito statico per GitHub Pages che usa il catalogo vixsrc e apre film, serie ed episodi in una nuova scheda:
 
 - `https://vixsrc.to/movie/{id}`
 - `https://vixsrc.to/tv/{id}/{season}/{episode}`
@@ -28,4 +28,4 @@ URL finale: `https://michelevettone.github.io/moviesrc/`
 
 ## Dominio embed personalizzato
 
-Il campo **Embed domain** in alto cambia l'host degli URL generati (default `vixsrc.to`). Se usi la funzione *Custom embed domain* di vixsrc, aggiungi li il dominio autorizzato; il valore viene salvato in localStorage.
+Il campo **Embed domain** in alto cambia l'host dei link generati (default `vixsrc.to`). Se usi la funzione *Custom embed domain* di vixsrc, aggiungi lì il dominio autorizzato; il valore viene salvato in localStorage. I link si aprono sempre in una nuova scheda.
