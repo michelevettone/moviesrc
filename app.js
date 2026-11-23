@@ -30,7 +30,7 @@ const state = {
 
 function embedUrl(item) {
   if (item.mediaType === 'tv') return `#tv/${item.tmdb_id}`;
-  return `https://${HOST}/movie/${item.imdb_id || item.tmdb_id}`;
+  return `https://${HOST}/movie/${item.imdb_id || item.tmdb_id}?lang=it`;
 }
 
 function label(item) {
@@ -278,7 +278,7 @@ async function showDetail(id) {
       for (const episode of list) {
         const link = document.createElement('a');
         link.className = 'episode';
-        link.href = `https://${HOST}/tv/${id}/${episode.s}/${episode.e}`;
+        link.href = `https://${HOST}/tv/${id}/${episode.s}/${episode.e}?lang=it`;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.textContent = `E${String(episode.e).padStart(2, '0')}`;
