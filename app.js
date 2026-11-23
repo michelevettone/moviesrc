@@ -138,6 +138,7 @@ const state = {
   detailId: null,
   searchSeq: 0,
   loadSeq: 0,
+  routeHash: null,
 };
 
 function t(key) {
@@ -713,6 +714,7 @@ async function showMovieDetail(id) {
 
 function showCatalog(restore = true) {
   state.detailId = null;
+  state.routeHash = location.hash;
   document.body.classList.remove('detail-open');
   els.detail.hidden = true;
   els.catalog.hidden = false;
@@ -721,6 +723,8 @@ function showCatalog(restore = true) {
 }
 
 function route() {
+  if (location.hash === state.routeHash) return;
+  state.routeHash = location.hash;
   const show = location.hash.match(/^#tv\/(\d+)$/);
   if (show) {
     showDetail(show[1]);
@@ -747,6 +751,16 @@ async function setLang(lang) {
   showCatalog(false);
   await load(state.type);
 }
+
+document.addEventListener('click', event => {
+  const detailLink = event.target.closest('a[href^="#movie/"], a[href^="#tv/"]');
+  if (!detailLink) return;
+  event.preventDefault();
+  const hash = detailLink.getAttribute('href');
+  if (location.hash === hash) return;
+  history.pushState(null, '', hash);
+  route();
+});
 
 document.addEventListener('click', event => {
   if (state.lang !== 'en' || !isIOS()) return;
@@ -861,6 +875,7 @@ if (new URLSearchParams(location.search).get('reset') === '1') {
 
 applyI18n();
 window.addEventListener('hashchange', route);
+window.addEventListener('popstate', route);
 if (location.hash.startsWith('#tv/') || location.hash.startsWith('#movie/')) route();
 else load('movie');
 
