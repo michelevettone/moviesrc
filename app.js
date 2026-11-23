@@ -201,6 +201,7 @@ function recentCard(entry) {
   if (!link.getAttribute('href').startsWith('#')) {
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
+    link.referrerPolicy = 'no-referrer';
   }
   if (entry.poster) {
     const img = document.createElement('img');
@@ -277,6 +278,7 @@ function posterNode(item, href, external = true) {
   if (external) {
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
+    link.referrerPolicy = 'no-referrer';
   }
   if (item.poster) {
     const img = document.createElement('img');
@@ -322,6 +324,7 @@ function card(item) {
   if (!isTv) {
     titleLink.target = '_blank';
     titleLink.rel = 'noopener noreferrer';
+    titleLink.referrerPolicy = 'no-referrer';
   }
   titleLink.className = 'title-link';
   titleLink.textContent = label(item);
@@ -333,6 +336,7 @@ function card(item) {
   if (!isTv) {
     play.target = '_blank';
     play.rel = 'noopener noreferrer';
+    play.referrerPolicy = 'no-referrer';
   }
   play.textContent = isTv ? t('episodes') : t('watch');
 
@@ -584,6 +588,7 @@ async function showDetail(id) {
         link.href = episodeUrl(id, episode.s, episode.e);
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
+        link.referrerPolicy = 'no-referrer';
         link.textContent = `E${String(episode.e).padStart(2, '0')}`;
         link.title = `${t('season')} ${episode.s} — E${episode.e}`;
         link.setAttribute('aria-label', `${t('season')} ${episode.s} E${episode.e}`);
