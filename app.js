@@ -270,20 +270,13 @@ function episodeUrl(showId, season, episode) {
     : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
 }
 
-const REDIRECT = 'https://moviesrc.michelevettone.com/go?u=';
-
 function isIOS() {
   return /iP(hone|ad|od)/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
-function isStandalone() {
-  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-}
-
 function externalLink(url) {
-  if (state.lang === 'en' && isIOS() && url.startsWith(`https://${VIDSRC}/`)) return url;
-  return isIOS() || isStandalone() ? REDIRECT + encodeURIComponent(url) : url;
+  return url;
 }
 
 function label(item) {
@@ -790,18 +783,21 @@ document.addEventListener('click', event => {
 });
 
 document.addEventListener('click', event => {
-  if (state.lang !== 'en' || !isIOS()) return;
+  if (!isIOS()) return;
   const link = event.target.closest('a[href]');
   if (!link) return;
   const href = link.getAttribute('href');
-  if (!href || !href.startsWith(`https://${VIDSRC}/`)) return;
+  if (!href || !/^https:\/\/(vixsrc\.to|vidsrc\.sh)\//.test(href)) return;
+  if (/CriOS/.test(navigator.userAgent)) return;
   event.preventDefault();
 
-  if (/CriOS/.test(navigator.userAgent)) {
-    location.href = href;
-    return;
-  }
-
+  let fallback = setTimeout(() => { location.href = href; }, 1600);
+  const clearFallback = () => {
+    if (!document.hidden) return;
+    clearTimeout(fallback);
+    document.removeEventListener('visibilitychange', clearFallback);
+  };
+  document.addEventListener('visibilitychange', clearFallback);
   location.href = href.replace(/^https:/, 'googlechromes:');
 });
 
