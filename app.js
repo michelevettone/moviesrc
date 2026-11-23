@@ -681,7 +681,20 @@ document.addEventListener('click', event => {
   const href = link.getAttribute('href');
   if (!href || !href.startsWith(`https://${VIDSRC}/`)) return;
   event.preventDefault();
-  location.href = href;
+
+  if (!isStandalone()) {
+    location.href = href;
+    return;
+  }
+
+  let fallback = setTimeout(() => { location.href = href; }, 2500);
+  const clearFallback = () => {
+    if (!document.hidden) return;
+    clearTimeout(fallback);
+    document.removeEventListener('visibilitychange', clearFallback);
+  };
+  document.addEventListener('visibilitychange', clearFallback);
+  location.href = `x-safari-${href}`;
 });
 
 els.langButton.addEventListener('click', event => {
