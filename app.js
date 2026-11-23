@@ -115,8 +115,8 @@ function card(item) {
   }
   play.textContent = isTv ? '▶ Episodi' : '▶ Guarda ↗';
 
-  body.append(top, title, play);
-  el.append(body);
+  body.append(title, play);
+  el.append(top, body);
   return el;
 }
 

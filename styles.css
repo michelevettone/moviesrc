@@ -80,9 +80,19 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); 
   background: rgba(9, 12, 18, .76);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
-.card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.kind { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); font-weight: 700; }
-.year { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.card-top {
+  position: absolute; z-index: 2; top: 8px; left: 8px; right: 8px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  pointer-events: none;
+}
+.kind, .year {
+  padding: 4px 7px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(9, 12, 18, .72);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  font-size: 10px; line-height: 1.25;
+}
+.kind { color: var(--accent); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.year { color: var(--text); font-variant-numeric: tabular-nums; }
 .card h3 {
   margin: 0; font-size: 14px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
