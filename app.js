@@ -255,12 +255,17 @@ function episodeUrl(showId, season, episode) {
 
 const REDIRECT = 'https://moviesrc.michelevettone.com/go?u=';
 
+function isIOS() {
+  return /iP(hone|ad|od)/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
 function isStandalone() {
   return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 }
 
 function externalLink(url) {
-  return isStandalone() ? REDIRECT + encodeURIComponent(url) : url;
+  return isIOS() || isStandalone() ? REDIRECT + encodeURIComponent(url) : url;
 }
 
 function label(item) {
@@ -733,6 +738,25 @@ els.more.addEventListener('click', () => {
   state.shown += PAGE_SIZE;
   render();
 });
+
+if (new URLSearchParams(location.search).get('reset') === '1') {
+  (async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(registration => registration.unregister()));
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(key => caches.delete(key)));
+      }
+    } finally {
+      const params = new URLSearchParams(location.search);
+      params.delete('reset');
+      location.replace(location.pathname + (params.toString() ? `?${params}` : '') + location.hash);
+    }
+  })();
+}
 
 applyI18n();
 window.addEventListener('hashchange', route);
