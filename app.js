@@ -121,6 +121,7 @@ const els = {
   settingsButton: document.getElementById('settings-button'),
   settingsMenu: document.getElementById('settings-menu'),
   browserSelect: document.getElementById('browser-select'),
+  appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
   searchClear: document.getElementById('search-clear'),
   status: document.getElementById('status'),
@@ -204,12 +205,16 @@ function closeSettings() {
   els.settingsButton.setAttribute('aria-expanded', 'false');
 }
 
+function braveQuery(url) {
+  return encodeURI(url).replace(/[?=&]/g, char => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
 function browserScheme(url, browser) {
   if (browser === 'chrome') return url.replace(/^https:/, 'googlechromes:');
   if (browser === 'safari') return `x-safari-${url}`;
-  if (browser === 'brave') return `brave://open-url?url=${encodeURIComponent(url)}`;
-  if (browser === 'brave-beta') return `brave-beta://open-url?url=${encodeURIComponent(url)}`;
-  if (browser === 'firefox') return `firefox://open-url?url=${encodeURIComponent(url)}`;
+  if (browser === 'brave') return `brave://open-url?url=${braveQuery(url)}`;
+  if (browser === 'brave-beta') return `brave-beta://open-url?url=${braveQuery(url)}`;
+  if (browser === 'firefox') return `firefox://open-url?url=${braveQuery(url)}`;
   if (browser === 'edge') return url.replace(/^https:/, 'microsoft-edge-https:');
   if (browser === 'wvc') return `wvc-x-callback://open?url=${encodeURIComponent(url)}`;
   return null;
@@ -997,6 +1002,9 @@ if (new URLSearchParams(location.search).get('reset') === '1') {
 }
 
 els.browserSelect.value = getBrowser();
+const appScript = document.querySelector('script[src*="app.js"]');
+const appVersion = appScript && appScript.src.match(/[?&]v=(\d+)/);
+if (appVersion) els.appVersion.textContent = `build ${appVersion[1]}`;
 const showBrowserSetting = isIOS() && isStandalone();
 els.settingsButton.hidden = !showBrowserSetting;
 if (!showBrowserSetting) closeSettings();

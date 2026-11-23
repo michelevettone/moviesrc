@@ -80,6 +80,7 @@ body {
   background: var(--panel-2); color: var(--text); font: inherit; font-size: 13px;
 }
 .setting-hint { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.setting-version { margin: 8px 0 0; color: var(--muted); font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .brand-mark {
   flex: 0 0 44px; display: grid; place-items: center; width: 44px; height: 44px;
   aspect-ratio: 1 / 1; border-radius: 12px;
