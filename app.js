@@ -682,19 +682,12 @@ document.addEventListener('click', event => {
   if (!href || !href.startsWith(`https://${VIDSRC}/`)) return;
   event.preventDefault();
 
-  if (!isStandalone()) {
+  if (/CriOS/.test(navigator.userAgent)) {
     location.href = href;
     return;
   }
 
-  let fallback = setTimeout(() => { location.href = href; }, 2500);
-  const clearFallback = () => {
-    if (!document.hidden) return;
-    clearTimeout(fallback);
-    document.removeEventListener('visibilitychange', clearFallback);
-  };
-  document.addEventListener('visibilitychange', clearFallback);
-  location.href = `x-safari-${href}`;
+  location.href = href.replace(/^https:/, 'googlechromes:');
 });
 
 els.langButton.addEventListener('click', event => {
