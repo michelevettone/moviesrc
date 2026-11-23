@@ -30,7 +30,8 @@ const I18N = {
     back: '← Torna al catalogo',
     more: 'Mostra altri',
     continueWatching: 'Continua a guardare',
-    resumeNext: '▶ Riprendi da {ep}',
+    resumeLast: '▶ Riprendi da {ep}',
+    resumeNext: '▶ Continua con {ep}',
     lastWatched: 'Ultimo aperto',
     detailLoading: 'Caricamento…',
     season: 'Stagione',
@@ -65,7 +66,8 @@ const I18N = {
     back: '← Back to catalog',
     more: 'Show more',
     continueWatching: 'Continue watching',
-    resumeNext: '▶ Resume {ep}',
+    resumeLast: '▶ Resume {ep}',
+    resumeNext: '▶ Continue with {ep}',
     lastWatched: 'Last opened',
     detailLoading: 'Loading…',
     season: 'Season',
@@ -107,6 +109,7 @@ const els = {
   detailTitle: document.getElementById('detail-title'),
   detailMeta: document.getElementById('detail-meta'),
   detailPoster: document.getElementById('detail-poster'),
+  detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
   seasons: document.getElementById('seasons'),
 };
@@ -465,6 +468,9 @@ async function showDetail(id) {
   els.detailMeta.textContent = '';
   els.detailPoster.replaceChildren();
   els.detailPoster.classList.remove('is-empty');
+  els.detailLast.hidden = true;
+  els.detailLast.removeAttribute('href');
+  els.detailLast.textContent = '';
   els.detailResume.hidden = true;
   els.detailResume.removeAttribute('href');
   els.detailResume.textContent = '';
@@ -516,18 +522,26 @@ async function showDetail(id) {
       ? { s: Number(previous.s), e: Number(previous.e) }
       : null;
 
+    function badge(episode) {
+      return `S${String(episode.s).padStart(2, '0')}E${String(episode.e).padStart(2, '0')}`;
+    }
+
     function setResume(last) {
       const index = last ? episodes.findIndex(episode => episode.s === last.s && episode.e === last.e) : -1;
+      const current = index >= 0 ? episodes[index] : null;
       const next = index >= 0 ? episodes[index + 1] : null;
-      els.detailResume.hidden = !next;
-      if (!next) {
-        els.detailResume.removeAttribute('href');
-        els.detailResume.textContent = '';
-        return;
+
+      els.detailLast.hidden = !current;
+      if (current) {
+        els.detailLast.href = episodeUrl(id, current.s, current.e);
+        els.detailLast.textContent = t('resumeLast').replace('{ep}', badge(current));
       }
-      const badge = `S${String(next.s).padStart(2, '0')}E${String(next.e).padStart(2, '0')}`;
-      els.detailResume.href = episodeUrl(id, next.s, next.e);
-      els.detailResume.textContent = t('resumeNext').replace('{ep}', badge);
+
+      els.detailResume.hidden = !next;
+      if (next) {
+        els.detailResume.href = episodeUrl(id, next.s, next.e);
+        els.detailResume.textContent = t('resumeNext').replace('{ep}', badge(next));
+      }
     }
 
     function markCurrent(episode) {
