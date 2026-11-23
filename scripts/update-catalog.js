@@ -39,12 +39,16 @@ async function fetchList(type) {
 function metaEntry(data, isTv) {
   if (!data) return null;
   const title = (isTv ? data.name : data.title) || (isTv ? data.original_name : data.original_title) || '';
-  const date = isTv ? data.first_air_date : data.release_date;
-  return [title, (date || '').slice(0, 4), data.poster_path || null];
+  const date = (isTv ? data.first_air_date : data.release_date) || '';
+  return [title, date.slice(0, 4), data.poster_path || null, date];
+}
+
+function needsDate(entry) {
+  return entry !== null && (!Array.isArray(entry) || entry.length < 4);
 }
 
 async function fetchAll(ids, isTv, meta, label) {
-  const queue = ids.filter(id => !(String(id) in meta));
+  const queue = ids.filter(id => !(String(id) in meta) || needsDate(meta[String(id)]));
   if (!queue.length) return;
   if (!TOKEN) {
     console.warn(`${label}: TMDB_TOKEN assente, salto ${queue.length} metadati`);

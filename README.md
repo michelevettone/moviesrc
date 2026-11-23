@@ -21,7 +21,9 @@ Il token TMDB è una v4 Read Access Token. Senza token lo script aggiorna solo i
 
 ## Metadati TMDB
 
-`data/meta.json` contiene titolo, anno e locandina per ogni TMDB ID. Viene popolato in modo incrementale: ai run successivi si scaricano solo gli ID nuovi. Nel repo il token non c'è: il workflow usa il secret `TMDB_TOKEN`.
+`data/meta.json` contiene titolo, anno, locandina e data di uscita per ogni TMDB ID. Viene popolato in modo incrementale: ai run successivi si scaricano solo gli ID nuovi. Nel repo il token non c'è: il workflow usa il secret `TMDB_TOKEN`.
+
+La ricerca cerca in tutto il catalogo (film e serie) e le liste sono ordinate per data di uscita più recente.
 
 Questo prodotto usa le API TMDB ma non è approvato né certificato da TMDB.
 
