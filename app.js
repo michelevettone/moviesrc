@@ -126,7 +126,6 @@ const els = {
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
   detailTrailerPoster: document.getElementById('detail-trailer-poster'),
   detailTrailerImage: document.getElementById('detail-trailer-image'),
-  detailTrailerFrame: document.getElementById('detail-trailer-frame'),
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
   detailOverview: document.getElementById('detail-overview'),
@@ -369,10 +368,18 @@ function card(item) {
   return el;
 }
 
+let trailerFrame = null;
+
+function removeTrailerFrame() {
+  if (trailerFrame) {
+    trailerFrame.remove();
+    trailerFrame = null;
+  }
+}
+
 function resetTrailer() {
   els.detailTrailerWrap.hidden = true;
-  els.detailTrailerFrame.hidden = true;
-  els.detailTrailerFrame.srcdoc = '';
+  removeTrailerFrame();
   els.detailTrailerPoster.hidden = false;
   els.detailTrailerImage.removeAttribute('src');
   delete els.detailTrailerPoster.dataset.key;
@@ -721,7 +728,6 @@ async function showMovieDetail(id) {
       els.detailTrailerImage.src = `https://img.youtube.com/vi/${data.trailer.key}/hqdefault.jpg`;
       els.detailTrailerPoster.dataset.key = data.trailer.key;
       els.detailTrailerPoster.hidden = false;
-      els.detailTrailerFrame.hidden = true;
       els.detailTrailerWrap.hidden = false;
     }
   } catch (error) {
@@ -802,10 +808,17 @@ document.addEventListener('click', event => {
 els.detailTrailerPoster.addEventListener('click', () => {
   const key = els.detailTrailerPoster.dataset.key;
   if (!key) return;
+  removeTrailerFrame();
   const origin = encodeURIComponent(location.origin);
   const player = `https://www.youtube-nocookie.com/embed/${key}?playsinline=1&rel=0&origin=${origin}`;
-  els.detailTrailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
-  els.detailTrailerFrame.hidden = false;
+  trailerFrame = document.createElement('iframe');
+  trailerFrame.title = 'Trailer';
+  trailerFrame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  trailerFrame.allowFullscreen = true;
+  trailerFrame.setAttribute('playsinline', '');
+  trailerFrame.referrerPolicy = 'origin';
+  trailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
+  els.detailTrailerWrap.append(trailerFrame);
   els.detailTrailerPoster.hidden = true;
 });
 
