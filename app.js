@@ -35,8 +35,6 @@ const I18N = {
     watch: '▶ Guarda ↗',
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
-    playTrailer: 'Riproduci trailer',
-    enableAudio: 'Attiva audio',
     episodes: '▶ Episodi',
     plotLoading: 'Caricamento trama…',
     plotUnavailable: 'Trama non disponibile.',
@@ -82,8 +80,6 @@ const I18N = {
     watch: '▶ Watch ↗',
     details: '▶ Details',
     trailer: '▶ Trailer',
-    playTrailer: 'Play trailer',
-    enableAudio: 'Enable audio',
     episodes: '▶ Episodes',
     plotLoading: 'Loading plot…',
     plotUnavailable: 'Plot unavailable.',
@@ -140,9 +136,7 @@ const els = {
   detailPoster: document.getElementById('detail-poster'),
   detailWatch: document.getElementById('detail-watch'),
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
-  detailTrailerPoster: document.getElementById('detail-trailer-poster'),
-  detailTrailerImage: document.getElementById('detail-trailer-image'),
-  trailerAudio: document.getElementById('trailer-audio'),
+
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
   detailOverview: document.getElementById('detail-overview'),
@@ -427,11 +421,8 @@ function card(item) {
 }
 
 let trailerFrame = null;
-let trailerAudioTimer = null;
 
 function removeTrailerFrame() {
-  clearTimeout(trailerAudioTimer);
-  els.trailerAudio.hidden = true;
   if (trailerFrame) {
     trailerFrame.remove();
     trailerFrame = null;
@@ -441,9 +432,6 @@ function removeTrailerFrame() {
 function resetTrailer() {
   els.detailTrailerWrap.hidden = true;
   removeTrailerFrame();
-  els.detailTrailerPoster.hidden = false;
-  els.detailTrailerImage.removeAttribute('src');
-  delete els.detailTrailerPoster.dataset.key;
 }
 
 function showLoading(on) {
@@ -786,9 +774,17 @@ async function showMovieDetail(id) {
     if (meta) els.detailMeta.textContent = meta;
     els.detailOverview.textContent = data.overview || t('plotUnavailable');
     if (data.trailer && data.trailer.key && data.trailer.official) {
-      els.detailTrailerImage.src = `https://img.youtube.com/vi/${data.trailer.key}/hqdefault.jpg`;
-      els.detailTrailerPoster.dataset.key = data.trailer.key;
-      els.detailTrailerPoster.hidden = false;
+      removeTrailerFrame();
+      const origin = encodeURIComponent(location.origin);
+      const player = `https://www.youtube-nocookie.com/embed/${data.trailer.key}?playsinline=1&rel=0&origin=${origin}`;
+      trailerFrame = document.createElement('iframe');
+      trailerFrame.title = 'Trailer';
+      trailerFrame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      trailerFrame.allowFullscreen = true;
+      trailerFrame.setAttribute('playsinline', '');
+      trailerFrame.referrerPolicy = 'origin';
+      trailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
+      els.detailTrailerWrap.append(trailerFrame);
       els.detailTrailerWrap.hidden = false;
     }
   } catch (error) {
@@ -861,36 +857,6 @@ document.addEventListener('click', event => {
   if (browser === 'chrome' && /CriOS/.test(navigator.userAgent)) return;
   event.preventDefault();
   launchBrowser(href, browser);
-});
-
-els.detailTrailerPoster.addEventListener('click', () => {
-  const key = els.detailTrailerPoster.dataset.key;
-  if (!key) return;
-  removeTrailerFrame();
-  const origin = encodeURIComponent(location.origin);
-  const player = `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&mute=1&enablejsapi=1&playsinline=1&rel=0&origin=${origin}`;
-  trailerFrame = document.createElement('iframe');
-  trailerFrame.title = 'Trailer';
-  trailerFrame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-  trailerFrame.allowFullscreen = true;
-  trailerFrame.setAttribute('playsinline', '');
-  trailerFrame.referrerPolicy = 'origin';
-  trailerFrame.srcdoc = `<!doctype html><style>html,body{margin:0;height:100%;background:#000}iframe{display:block;width:100%;height:100%;border:0}</style><iframe src="${player}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen playsinline referrerpolicy="origin"></iframe>`;
-  els.detailTrailerWrap.append(trailerFrame);
-  els.detailTrailerPoster.hidden = true;
-  trailerAudioTimer = setTimeout(() => {
-    if (trailerFrame) els.trailerAudio.hidden = false;
-  }, 1200);
-});
-
-els.trailerAudio.addEventListener('click', () => {
-  if (!trailerFrame) return;
-  const command = (func, args = []) => trailerFrame.contentWindow.postMessage(
-    JSON.stringify({ event: 'command', func, args }), '*');
-  command('unMute');
-  command('setVolume', [100]);
-  command('playVideo');
-  els.trailerAudio.hidden = true;
 });
 
 function updateSearchClear() {

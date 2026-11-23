@@ -242,25 +242,6 @@ body.detail-open .site-header, body.detail-open .footer { display: none; }
 }
 .trailer[hidden] { display: none; }
 .trailer iframe { display: block; width: 100%; height: 100%; border: 0; }
-.trailer iframe[hidden] { display: none; }
-.trailer-poster {
-  position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0;
-  background: #000; cursor: pointer;
-}
-.trailer-poster[hidden] { display: none; }
-.trailer-poster img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: .8; }
-.trailer-play {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  color: #fff; font-size: 46px; background: rgba(0, 0, 0, .25);
-}
-.trailer-poster:hover .trailer-play { background: rgba(0, 0, 0, .4); }
-.trailer-audio {
-  position: absolute; z-index: 3; top: 10px; right: 10px;
-  padding: 8px 12px; border: 0; border-radius: 999px;
-  background: rgba(9, 12, 18, .85); color: #fff;
-  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
-}
-.trailer-audio[hidden] { display: none; }
 .season { margin-top: 28px; }
 .season h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 16px; }
 .season .count { color: var(--muted); font-size: 12px; font-weight: 400; }
