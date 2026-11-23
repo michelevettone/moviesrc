@@ -172,7 +172,8 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); 
 }
 .more:hover { border-color: var(--accent-2); }
 
-.detail { padding-bottom: 20px; }
+body.detail-open .site-header { display: none; }
+.detail { padding-top: env(safe-area-inset-top); padding-bottom: 20px; }
 .back { display: inline-block; margin: 24px 0 18px; color: var(--muted); font-size: 13px; text-decoration: none; }
 .back:hover { color: var(--text); }
 .detail-head { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }

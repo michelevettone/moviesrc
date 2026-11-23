@@ -462,6 +462,7 @@ function getEpisodes() {
 
 async function showDetail(id) {
   state.detailId = id;
+  document.body.classList.add('detail-open');
   els.catalog.hidden = true;
   els.detail.hidden = false;
   els.detailTitle.textContent = t('detailLoading');
@@ -621,6 +622,7 @@ async function showDetail(id) {
 
 function showCatalog(restore = true) {
   state.detailId = null;
+  document.body.classList.remove('detail-open');
   els.detail.hidden = true;
   els.catalog.hidden = false;
   document.title = t('title');
