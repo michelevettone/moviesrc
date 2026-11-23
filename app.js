@@ -5,6 +5,8 @@ const VIX = 'vixsrc.to';
 const VIDSRC = 'vidsrc.sh';
 const LANG_KEY = 'moviesrc-lang';
 const RECENT_KEY = 'moviesrc-recent';
+const BROWSER_KEY = 'moviesrc-browser';
+const BROWSERS = new Set(['chrome', 'safari', 'brave', 'firefox', 'edge', 'wvc', 'system']);
 
 const I18N = {
   it: {
@@ -15,6 +17,10 @@ const I18N = {
     searchPlaceholder: 'Cerca un titolo…',
     searchLabel: 'Cerca per titolo',
     clearSearch: 'Cancella ricerca',
+    settings: 'Impostazioni',
+    openWith: 'Apri i link con',
+    browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
+    systemBrowser: 'Browser di sistema',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
     results: 'risultati in film e serie',
@@ -57,6 +63,10 @@ const I18N = {
     searchPlaceholder: 'Search a title…',
     searchLabel: 'Search by title',
     clearSearch: 'Clear search',
+    settings: 'Settings',
+    openWith: 'Open links with',
+    browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
+    systemBrowser: 'System browser',
     loading: 'Loading catalog…',
     searching: 'Searching…',
     results: 'results in movies and TV shows',
@@ -108,6 +118,9 @@ const els = {
   langMenu: document.getElementById('lang-menu'),
   langOptions: [...document.querySelectorAll('.lang-option')],
   langCurrent: document.getElementById('lang-current'),
+  settingsButton: document.getElementById('settings-button'),
+  settingsMenu: document.getElementById('settings-menu'),
+  browserSelect: document.getElementById('browser-select'),
   search: document.getElementById('search'),
   searchClear: document.getElementById('search-clear'),
   status: document.getElementById('status'),
@@ -175,6 +188,45 @@ function applyI18n() {
 function closeLangMenu() {
   els.langMenu.hidden = true;
   els.langButton.setAttribute('aria-expanded', 'false');
+}
+
+function getBrowser() {
+  try {
+    const saved = localStorage.getItem(BROWSER_KEY);
+    return BROWSERS.has(saved) ? saved : 'chrome';
+  } catch {
+    return 'chrome';
+  }
+}
+
+function closeSettings() {
+  els.settingsMenu.hidden = true;
+  els.settingsButton.setAttribute('aria-expanded', 'false');
+}
+
+function browserScheme(url, browser) {
+  if (browser === 'chrome') return url.replace(/^https:/, 'googlechromes:');
+  if (browser === 'safari') return `x-safari-${url}`;
+  if (browser === 'brave') return `brave://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
+  if (browser === 'firefox') return `firefox://open-url?url=${encodeURIComponent(encodeURIComponent(url))}`;
+  if (browser === 'edge') return url.replace(/^https:/, 'microsoft-edge-https:');
+  if (browser === 'wvc') return `wvc-x-callback://open?url=${encodeURIComponent(url)}`;
+  return null;
+}
+
+function launchBrowser(url, browser) {
+  const scheme = browserScheme(url, browser);
+  if (!scheme) return false;
+
+  let fallback = setTimeout(() => { location.href = url; }, 1800);
+  const clearFallback = () => {
+    if (!document.hidden) return;
+    clearTimeout(fallback);
+    document.removeEventListener('visibilitychange', clearFallback);
+  };
+  document.addEventListener('visibilitychange', clearFallback);
+  location.href = scheme;
+  return true;
 }
 
 function readRecent() {
@@ -788,17 +840,11 @@ document.addEventListener('click', event => {
   if (!link) return;
   const href = link.getAttribute('href');
   if (!href || !/^https:\/\/(vixsrc\.to|vidsrc\.sh)\//.test(href)) return;
-  if (/CriOS/.test(navigator.userAgent)) return;
+  const browser = getBrowser();
+  if (browser === 'system') return;
+  if (browser === 'chrome' && /CriOS/.test(navigator.userAgent)) return;
   event.preventDefault();
-
-  let fallback = setTimeout(() => { location.href = href; }, 1600);
-  const clearFallback = () => {
-    if (!document.hidden) return;
-    clearTimeout(fallback);
-    document.removeEventListener('visibilitychange', clearFallback);
-  };
-  document.addEventListener('visibilitychange', clearFallback);
-  location.href = href.replace(/^https:/, 'googlechromes:');
+  launchBrowser(href, browser);
 });
 
 els.detailTrailerPoster.addEventListener('click', () => {
@@ -842,9 +888,23 @@ els.back.addEventListener('click', event => {
 
 els.langButton.addEventListener('click', event => {
   event.stopPropagation();
+  closeSettings();
   const open = els.langMenu.hidden;
   els.langMenu.hidden = !open;
   els.langButton.setAttribute('aria-expanded', String(open));
+});
+
+els.settingsButton.addEventListener('click', event => {
+  event.stopPropagation();
+  closeLangMenu();
+  const open = els.settingsMenu.hidden;
+  els.settingsMenu.hidden = !open;
+  els.settingsButton.setAttribute('aria-expanded', String(open));
+});
+
+els.browserSelect.addEventListener('change', () => {
+  try { localStorage.setItem(BROWSER_KEY, els.browserSelect.value); } catch {}
+  closeSettings();
 });
 
 els.langOptions.forEach(option => option.addEventListener('click', () => {
@@ -854,10 +914,14 @@ els.langOptions.forEach(option => option.addEventListener('click', () => {
 
 document.addEventListener('click', event => {
   if (!event.target.closest('.lang-select')) closeLangMenu();
+  if (!event.target.closest('.settings')) closeSettings();
 });
 
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') closeLangMenu();
+  if (event.key === 'Escape') {
+    closeLangMenu();
+    closeSettings();
+  }
 });
 
 els.tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -927,6 +991,7 @@ if (new URLSearchParams(location.search).get('reset') === '1') {
   })();
 }
 
+els.browserSelect.value = getBrowser();
 updateSearchClear();
 applyI18n();
 window.addEventListener('hashchange', route);

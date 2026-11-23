@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=33">
+  <link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
   <header class="site-header">
@@ -37,6 +37,22 @@
         <div id="lang-menu" class="lang-menu" role="listbox" aria-label="Lingua / Language" hidden>
           <button class="lang-option is-active" type="button" role="option" data-lang="it" aria-selected="true">Italiano</button>
           <button class="lang-option" type="button" role="option" data-lang="en" aria-selected="false">English</button>
+        </div>
+      </div>
+      <div class="settings">
+        <button id="settings-button" class="icon-button" type="button" aria-haspopup="dialog" aria-expanded="false" data-i18n-aria="settings">⚙</button>
+        <div id="settings-menu" class="settings-menu" role="dialog" aria-label="Impostazioni" hidden>
+          <label class="setting-label" for="browser-select" data-i18n="openWith">Apri i link con</label>
+          <select id="browser-select" class="browser-select">
+            <option value="chrome">Chrome</option>
+            <option value="safari">Safari</option>
+            <option value="brave">Brave</option>
+            <option value="firefox">Firefox</option>
+            <option value="edge">Microsoft Edge</option>
+            <option value="wvc">Web Video Cast</option>
+            <option value="system" data-i18n="systemBrowser">Browser di sistema</option>
+          </select>
+          <p class="setting-hint" data-i18n="browserHint">Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.</p>
         </div>
       </div>
     </div>
@@ -102,6 +118,6 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=49"></script>
+  <script src="app.js?v=50"></script>
 </body>
 </html>
