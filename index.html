@@ -16,7 +16,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
   <header class="site-header">
@@ -59,7 +59,11 @@
         </label>
       </section>
 
-      <p id="status" class="status" role="status" aria-live="polite" data-i18n="loading">Caricamento catalogo…</p>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <div id="loading" class="loading" role="status" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="sr-only" data-i18n="loading">Caricamento catalogo…</span>
+      </div>
 
       <section id="results" class="grid" aria-label="Risultati"></section>
       <button id="more" class="more" type="button" hidden data-i18n="more">Mostra altri</button>
@@ -84,6 +88,6 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>

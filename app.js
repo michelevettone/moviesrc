@@ -94,6 +94,7 @@ const els = {
   status: document.getElementById('status'),
   results: document.getElementById('results'),
   more: document.getElementById('more'),
+  loading: document.getElementById('loading'),
   recent: document.getElementById('recent'),
   recentTrack: document.getElementById('recent-track'),
   catalog: document.getElementById('catalog'),
@@ -338,7 +339,17 @@ function card(item) {
   return el;
 }
 
+function showLoading(on) {
+  els.loading.hidden = !on;
+  els.results.hidden = on;
+  if (on) {
+    els.status.textContent = '';
+    els.more.hidden = true;
+  }
+}
+
 function render() {
+  els.results.hidden = false;
   let filtered = state.items.filter(item => matches(item, state.query)).sort(byDate);
   const count = filtered.length.toLocaleString(state.lang === 'it' ? 'it-IT' : 'en-US');
   els.status.textContent = state.query
@@ -412,14 +423,20 @@ async function load(type) {
   state.type = type;
   state.shown = PAGE_SIZE;
   state.items = [];
-  els.status.textContent = t('loading');
+  showLoading(true);
   try {
     const items = await getCatalog(type);
-    if (token !== state.loadSeq || state.query) return;
+    if (token !== state.loadSeq) return;
+    if (state.query) {
+      showLoading(false);
+      return;
+    }
     state.items = items;
+    showLoading(false);
     render();
   } catch (error) {
     if (token !== state.loadSeq) return;
+    showLoading(false);
     els.status.textContent = state.lang === 'en' && /404/.test(error.message)
       ? t('enSoon')
       : t('loadError') + error.message;
@@ -613,6 +630,7 @@ els.search.addEventListener('input', async () => {
     render();
     return;
   }
+  showLoading(false);
   els.status.textContent = t('searching');
   try {
     const [movies, shows] = await Promise.all([getCatalog('movie'), getCatalog('tv')]);
