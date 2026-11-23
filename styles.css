@@ -13,11 +13,14 @@
 
 * { box-sizing: border-box; }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
 body {
   margin: 0;
   background: radial-gradient(1100px 500px at 12% -10%, #21283b 0%, transparent 60%), var(--bg);
   color: var(--text);
   font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  touch-action: pan-y;
 }
 
 .wrap { width: min(1200px, calc(100% - 32px)); margin-inline: auto; }

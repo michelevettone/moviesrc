@@ -331,3 +331,8 @@ else load('movie');
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
+
+// iOS ignora user-scalable=no: blocca il pinch-zoom a livello di gesture.
+for (const eventName of ['gesturestart', 'gesturechange']) {
+  document.addEventListener(eventName, event => event.preventDefault(), { passive: false });
+}
