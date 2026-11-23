@@ -1,8 +1,88 @@
 const PAGE_SIZE = 48;
 const IMG = 'https://image.tmdb.org/t/p/w342';
-const HOST = 'vixsrc.to';
+const VIX = 'vixsrc.to';
+const VIDSRC = 'vidsrc.sh';
+const LANG_KEY = 'moviesrc-lang';
+
+const I18N = {
+  it: {
+    title: 'moviesrc — film e serie TV',
+    tagline: 'Catalogo film e serie TV: scegli un titolo e guardalo.',
+    movies: 'Film',
+    tv: 'Serie TV',
+    searchPlaceholder: 'Cerca un titolo…',
+    searchLabel: 'Cerca per titolo',
+    loading: 'Caricamento catalogo…',
+    searching: 'Ricerca…',
+    results: 'risultati in film e serie',
+    titles: 'titoli',
+    catalog: 'catalogo',
+    movieCatalog: 'film',
+    tvCatalog: 'serie TV',
+    empty: 'Nessun titolo trovato. Prova con un altro nome o ID.',
+    loadError: 'Impossibile caricare il catalogo: ',
+    searchError: 'Errore di ricerca: ',
+    enSoon: 'Catalogo inglese in preparazione. Riprova tra poco.',
+    watch: '▶ Guarda ↗',
+    episodes: '▶ Episodi',
+    back: '← Torna al catalogo',
+    more: 'Mostra altri',
+    detailLoading: 'Caricamento…',
+    season: 'Stagione',
+    episodeOne: '1 episodio',
+    episodeMany: '{n} episodi',
+    noEpisodes: 'Nessun episodio disponibile per questa serie.',
+    error: 'Errore',
+    untitled: 'Senza titolo',
+    footer1: 'Catalogo aggiornato automaticamente ogni giorno.',
+    footer2: 'Fonti: vixsrc (italiano) e vidsrc (inglese). I link si aprono in una nuova scheda.',
+  },
+  en: {
+    title: 'moviesrc — movies and TV shows',
+    tagline: 'Movie and TV catalog: pick a title and watch it.',
+    movies: 'Movies',
+    tv: 'TV Shows',
+    searchPlaceholder: 'Search a title…',
+    searchLabel: 'Search by title',
+    loading: 'Loading catalog…',
+    searching: 'Searching…',
+    results: 'results in movies and TV shows',
+    titles: 'titles',
+    catalog: 'catalog',
+    movieCatalog: 'movies',
+    tvCatalog: 'TV shows',
+    empty: 'No titles found. Try another name or ID.',
+    loadError: 'Could not load the catalog: ',
+    searchError: 'Search error: ',
+    enSoon: 'English catalog is being prepared. Try again shortly.',
+    watch: '▶ Watch ↗',
+    episodes: '▶ Episodes',
+    back: '← Back to catalog',
+    more: 'Show more',
+    detailLoading: 'Loading…',
+    season: 'Season',
+    episodeOne: '1 episode',
+    episodeMany: '{n} episodes',
+    noEpisodes: 'No episodes available for this show.',
+    error: 'Error',
+    untitled: 'Untitled',
+    footer1: 'Catalog refreshed automatically every day.',
+    footer2: 'Sources: vixsrc (Italian) and vidsrc (English). Links open in a new tab.',
+  },
+};
+
+function detectLang() {
+  try {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (saved === 'it' || saved === 'en') return saved;
+  } catch {}
+  const primary = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+  return /^it\b/i.test(primary) ? 'it' : 'en';
+}
+
 const els = {
   tabs: [...document.querySelectorAll('.tab')],
+  langButtons: [...document.querySelectorAll('.lang-btn')],
   search: document.getElementById('search'),
   status: document.getElementById('status'),
   results: document.getElementById('results'),
@@ -17,23 +97,53 @@ const els = {
 };
 
 const state = {
+  lang: detectLang(),
   type: 'movie',
   query: '',
   shown: PAGE_SIZE,
   cache: {},
   items: [],
   meta: null,
-  episodes: null,
+  episodes: {},
+  detailId: null,
   searchSeq: 0,
+  loadSeq: 0,
 };
 
-function embedUrl(item) {
+function t(key) {
+  return I18N[state.lang][key];
+}
+
+function applyI18n() {
+  document.documentElement.lang = state.lang;
+  document.title = t('title');
+  for (const el of document.querySelectorAll('[data-i18n]')) {
+    el.textContent = t(el.dataset.i18n);
+  }
+  for (const el of document.querySelectorAll('[data-i18n-placeholder]')) {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  }
+  for (const button of els.langButtons) {
+    const active = button.dataset.lang === state.lang;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  }
+}
+
+function providerUrl(item) {
   if (item.mediaType === 'tv') return `#tv/${item.tmdb_id}`;
-  return `https://${HOST}/movie/${item.imdb_id || item.tmdb_id}?lang=it`;
+  if (state.lang === 'it') return `https://${VIX}/movie/${item.imdb_id || item.tmdb_id}?lang=it`;
+  return `https://${VIDSRC}/embed/movie/${item.tmdb_id}`;
+}
+
+function episodeUrl(showId, season, episode) {
+  return state.lang === 'it'
+    ? `https://${VIX}/tv/${showId}/${season}/${episode}?lang=it`
+    : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
 }
 
 function label(item) {
-  return item.title || 'Senza titolo';
+  return item.title || t('untitled');
 }
 
 function normalize(value) {
@@ -77,16 +187,14 @@ function card(item) {
   const el = document.createElement('article');
   el.className = 'card';
   const isTv = item.mediaType === 'tv';
-  const url = embedUrl(item);
+  const url = providerUrl(item);
   el.append(posterNode(item, url, !isTv));
 
-  const body = document.createElement('div');
-  body.className = 'card-body';
   const top = document.createElement('div');
   top.className = 'card-top';
   const kind = document.createElement('span');
   kind.className = 'kind';
-  kind.textContent = isTv ? 'Serie TV' : 'Film';
+  kind.textContent = isTv ? t('tv') : t('movies');
   top.append(kind);
   if (item.year) {
     const year = document.createElement('span');
@@ -95,6 +203,8 @@ function card(item) {
     top.append(year);
   }
 
+  const body = document.createElement('div');
+  body.className = 'card-body';
   const title = document.createElement('h3');
   const titleLink = document.createElement('a');
   titleLink.href = url;
@@ -113,7 +223,7 @@ function card(item) {
     play.target = '_blank';
     play.rel = 'noopener noreferrer';
   }
-  play.textContent = isTv ? '▶ Episodi' : '▶ Guarda ↗';
+  play.textContent = isTv ? t('episodes') : t('watch');
 
   body.append(title, play);
   el.append(top, body);
@@ -122,20 +232,21 @@ function card(item) {
 
 function render() {
   let filtered = state.items.filter(item => matches(item, state.query)).sort(byDate);
+  const count = filtered.length.toLocaleString(state.lang === 'it' ? 'it-IT' : 'en-US');
   els.status.textContent = state.query
-    ? `${filtered.length.toLocaleString('it-IT')} risultati in film e serie`
-    : `${filtered.length.toLocaleString('it-IT')} titoli · catalogo ${state.type === 'movie' ? 'film' : 'serie TV'}`;
+    ? `${count} ${t('results')}`
+    : `${count} ${t('titles')} · ${t('catalog')} ${state.type === 'movie' ? t('movieCatalog') : t('tvCatalog')}`;
   els.results.replaceChildren(...filtered.slice(0, state.shown).map(card));
   els.more.hidden = filtered.length <= state.shown;
   if (!filtered.length) {
     const empty = document.createElement('p');
     empty.className = 'muted';
-    empty.textContent = 'Nessun titolo trovato. Prova con un altro nome o ID.';
+    empty.textContent = t('empty');
     els.results.append(empty);
   }
 }
 
-function getMeta() {
+function getItMeta() {
   if (!state.meta) {
     state.meta = fetch('data/meta.json')
       .then(response => response.ok ? response.json() : {})
@@ -145,56 +256,83 @@ function getMeta() {
 }
 
 async function getCatalog(type) {
-  if (state.cache[type]) return state.cache[type];
-  const [rows, meta] = await Promise.all([
-    fetch(`data/${type}.json`).then(response => {
+  const key = `${state.lang}:${type}`;
+  if (state.cache[key]) return state.cache[key];
+  let items;
+  if (state.lang === 'en') {
+    const rows = await fetch(`data/${type}-en.json`).then(response => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
-    }),
-    getMeta(),
-  ]);
-  const group = type === 'movie' ? meta.movie : meta.tv;
-  state.cache[type] = rows.map(row => {
-    const info = group && group[row[0]];
-    return {
+    });
+    items = rows.map(row => ({
       tmdb_id: row[0],
-      imdb_id: row[1],
+      imdb_id: null,
       mediaType: type,
-      title: info ? info[0] : '',
-      year: info ? info[1] : '',
-      poster: info ? info[2] : null,
-      date: info ? info[3] || '' : '',
-    };
-  });
-  return state.cache[type];
+      title: row[1],
+      year: row[2],
+      poster: row[3],
+      date: row[4],
+    }));
+  } else {
+    const [rows, meta] = await Promise.all([
+      fetch(`data/${type}.json`).then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      }),
+      getItMeta(),
+    ]);
+    const group = type === 'movie' ? meta.movie : meta.tv;
+    items = rows.map(row => {
+      const info = group && group[row[0]];
+      return {
+        tmdb_id: row[0],
+        imdb_id: row[1],
+        mediaType: type,
+        title: info ? info[0] : '',
+        year: info ? info[1] : '',
+        poster: info ? info[2] : null,
+        date: info ? info[3] || '' : '',
+      };
+    });
+  }
+  state.cache[key] = items;
+  return items;
 }
 
 async function load(type) {
+  const token = ++state.loadSeq;
   state.type = type;
   state.shown = PAGE_SIZE;
   state.items = [];
-  els.status.textContent = 'Caricamento catalogo…';
+  els.status.textContent = t('loading');
   try {
-    state.items = await getCatalog(type);
+    const items = await getCatalog(type);
+    if (token !== state.loadSeq || state.query) return;
+    state.items = items;
     render();
   } catch (error) {
-    els.status.textContent = `Impossibile caricare il catalogo: ${error.message}`;
+    if (token !== state.loadSeq) return;
+    els.status.textContent = state.lang === 'en' && /404/.test(error.message)
+      ? t('enSoon')
+      : t('loadError') + error.message;
   }
 }
 
 function getEpisodes() {
-  if (!state.episodes) {
-    state.episodes = fetch('data/episode.json')
+  if (!state.episodes[state.lang]) {
+    const file = state.lang === 'it' ? 'data/episode.json' : 'data/episode-en.json';
+    state.episodes[state.lang] = fetch(file)
       .then(response => response.ok ? response.json() : [])
       .catch(() => []);
   }
-  return state.episodes;
+  return state.episodes[state.lang];
 }
 
 async function showDetail(id) {
+  state.detailId = id;
   els.catalog.hidden = true;
   els.detail.hidden = false;
-  els.detailTitle.textContent = 'Caricamento…';
+  els.detailTitle.textContent = t('detailLoading');
   els.detailMeta.textContent = '';
   els.detailPoster.replaceChildren();
   els.detailPoster.classList.remove('is-empty');
@@ -202,16 +340,24 @@ async function showDetail(id) {
   window.scrollTo({ top: 0 });
 
   try {
-    const [meta, rows] = await Promise.all([getMeta(), getEpisodes()]);
-    const info = meta.tv && meta.tv[id];
-    const title = info ? info[0] : 'Senza titolo';
+    let info = null;
+    if (state.lang === 'en') {
+      const shows = await getCatalog('tv');
+      info = shows.find(show => String(show.tmdb_id) === id) || null;
+    } else {
+      const meta = await getItMeta();
+      const entry = meta.tv && meta.tv[id];
+      if (entry) info = { title: entry[0], year: entry[1], poster: entry[2] };
+    }
+    const rows = await getEpisodes();
+    const title = info && info.title ? info.title : t('untitled');
     document.title = `${title} — moviesrc`;
     els.detailTitle.textContent = title;
-    els.detailMeta.textContent = info && info[1] ? info[1] : '';
+    els.detailMeta.textContent = info && info.year ? info.year : '';
 
-    if (info && info[2]) {
+    if (info && info.poster) {
       const img = document.createElement('img');
-      img.src = `${IMG}${info[2]}`;
+      img.src = `${IMG}${info.poster}`;
       img.alt = title;
       els.detailPoster.append(img);
     } else {
@@ -221,13 +367,13 @@ async function showDetail(id) {
 
     const episodes = rows
       .filter(row => String(row[0]) === id)
-      .map(row => ({ s: row[2], e: row[3] }))
+      .map(row => state.lang === 'it' ? { s: row[2], e: row[3] } : { s: row[1], e: row[2] })
       .sort((a, b) => a.s - b.s || a.e - b.e);
 
     if (!episodes.length) {
       const empty = document.createElement('p');
       empty.className = 'muted';
-      empty.textContent = 'Nessun episodio disponibile per questa serie.';
+      empty.textContent = t('noEpisodes');
       els.seasons.append(empty);
       return;
     }
@@ -242,37 +388,38 @@ async function showDetail(id) {
       const section = document.createElement('section');
       section.className = 'season';
       const heading = document.createElement('h2');
-      heading.textContent = `Stagione ${season}`;
+      heading.textContent = `${t('season')} ${season}`;
       const count = document.createElement('span');
       count.className = 'count';
-      count.textContent = list.length === 1 ? '1 episodio' : `${list.length} episodi`;
+      count.textContent = list.length === 1 ? t('episodeOne') : t('episodeMany').replace('{n}', list.length);
       heading.append(count);
       const grid = document.createElement('div');
       grid.className = 'episode-grid';
       for (const episode of list) {
         const link = document.createElement('a');
         link.className = 'episode';
-        link.href = `https://${HOST}/tv/${id}/${episode.s}/${episode.e}?lang=it`;
+        link.href = episodeUrl(id, episode.s, episode.e);
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.textContent = `E${String(episode.e).padStart(2, '0')}`;
-        link.title = `Guarda S${season} E${episode.e}`;
-        link.setAttribute('aria-label', `Guarda stagione ${season} episodio ${episode.e}`);
+        link.title = `${t('season')} ${episode.s} — E${episode.e}`;
+        link.setAttribute('aria-label', `${t('season')} ${episode.s} E${episode.e}`);
         grid.append(link);
       }
       section.append(heading, grid);
       els.seasons.append(section);
     }
   } catch (error) {
-    els.detailTitle.textContent = 'Errore';
+    els.detailTitle.textContent = t('error');
     els.detailMeta.textContent = error.message;
   }
 }
 
 function showCatalog(restore = true) {
+  state.detailId = null;
   els.detail.hidden = true;
   els.catalog.hidden = false;
-  document.title = 'moviesrc — catalogo vixsrc';
+  document.title = t('title');
   if (restore && !state.items.length) load(state.type);
 }
 
@@ -284,6 +431,22 @@ function route() {
   }
   showCatalog();
 }
+
+async function setLang(lang) {
+  if (lang === state.lang) return;
+  state.lang = lang;
+  try { localStorage.setItem(LANG_KEY, lang); } catch {}
+  applyI18n();
+  state.searchSeq++;
+  state.query = '';
+  els.search.value = '';
+  state.shown = PAGE_SIZE;
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  showCatalog(false);
+  await load(state.type);
+}
+
+els.langButtons.forEach(button => button.addEventListener('click', () => setLang(button.dataset.lang)));
 
 els.tabs.forEach(tab => tab.addEventListener('click', () => {
   els.tabs.forEach(t => {
@@ -304,18 +467,18 @@ els.search.addEventListener('input', async () => {
   state.query = normalize(els.search.value).trim();
   state.shown = PAGE_SIZE;
   if (!state.query) {
-    state.items = state.cache[state.type] || [];
+    state.items = state.cache[`${state.lang}:${state.type}`] || [];
     render();
     return;
   }
-  els.status.textContent = 'Ricerca…';
+  els.status.textContent = t('searching');
   try {
     const [movies, shows] = await Promise.all([getCatalog('movie'), getCatalog('tv')]);
     if (token !== state.searchSeq) return;
     state.items = movies.concat(shows);
     render();
   } catch (error) {
-    if (token === state.searchSeq) els.status.textContent = `Errore di ricerca: ${error.message}`;
+    if (token === state.searchSeq) els.status.textContent = t('searchError') + error.message;
   }
 });
 
@@ -324,6 +487,7 @@ els.more.addEventListener('click', () => {
   render();
 });
 
+applyI18n();
 window.addEventListener('hashchange', route);
 if (location.hash.startsWith('#tv/')) route();
 else load('movie');

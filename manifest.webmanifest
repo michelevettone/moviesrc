@@ -2,7 +2,7 @@
   "id": "./",
   "name": "moviesrc",
   "short_name": "moviesrc",
-  "description": "Catalogo film e serie TV con player vixsrc.",
+  "description": "Catalogo film e serie TV con player vixsrc e vidsrc.",
   "lang": "it",
   "start_url": "./",
   "scope": "./",
