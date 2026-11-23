@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: 20
       - run: node scripts/update-catalog.js
+        env:
+          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"

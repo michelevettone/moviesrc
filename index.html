@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Esplora il catalogo vixsrc e apri film, serie e episodi con TMDB o IMDb ID.">
   <title>moviesrc — catalogo vixsrc</title>
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <header class="site-header">
@@ -34,7 +34,7 @@
       </div>
       <label class="search">
         <span class="sr-only">Cerca per TMDB o IMDb ID</span>
-        <input id="search" type="search" placeholder="Cerca TMDB ID, IMDb ID o S02E03…" autocomplete="off">
+        <input id="search" type="search" placeholder="Cerca titolo, TMDB ID, IMDb ID o S02E03…" autocomplete="off">
       </label>
     </section>
 
@@ -46,9 +46,10 @@
 
   <footer class="wrap footer">
     <p>Catalogo aggiornato automaticamente ogni giorno da <code>https://vixsrc.to/api/list/{type}?lang=it</code>.</p>
-    <p>Gli ID provengono da TMDB / IMDb; i link aprono vixsrc in una nuova scheda.</p>
+    <p>Gli ID e i metadati provengono da TMDB / IMDb; i link aprono vixsrc in una nuova scheda.</p>
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

@@ -13,9 +13,17 @@ L'endpoint `/api/list` non restituisce header CORS, quindi un browser su `github
 ## Sviluppo
 
 ```sh
-node scripts/update-catalog.js   # rigenera data/*.json
-python3 -m http.server 8000      # apri http://localhost:8000
+TMDB_TOKEN=... node scripts/update-catalog.js   # rigenera data/*.json
+python3 -m http.server 8000                     # apri http://localhost:8000
 ```
+
+Il token TMDB è una v4 Read Access Token. Senza token lo script aggiorna solo i cataloghi e mantiene i metadati già presenti.
+
+## Metadati TMDB
+
+`data/meta.json` contiene titolo, anno e locandina per ogni TMDB ID. Viene popolato in modo incrementale: ai run successivi si scaricano solo gli ID nuovi. Nel repo il token non c'è: il workflow usa il secret `TMDB_TOKEN`.
+
+Questo prodotto usa le API TMDB ma non è approvato né certificato da TMDB.
 
 ## Deploy
 
