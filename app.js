@@ -598,6 +598,12 @@ els.tabs.forEach(tab => tab.addEventListener('click', () => {
   load(tab.dataset.type);
 }));
 
+els.search.addEventListener('keydown', event => {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  els.search.blur();
+});
+
 els.search.addEventListener('input', async () => {
   const token = ++state.searchSeq;
   state.query = normalize(els.search.value).trim();
