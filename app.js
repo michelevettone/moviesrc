@@ -4,6 +4,7 @@ const IMG_DETAIL = 'https://image.tmdb.org/t/p/w342';
 const VIX = 'vixsrc.to';
 const VIDSRC = 'vidsrc.sh';
 const LANG_KEY = 'moviesrc-lang';
+const RECENT_KEY = 'moviesrc-recent';
 
 const I18N = {
   it: {
@@ -28,6 +29,7 @@ const I18N = {
     episodes: '▶ Episodi',
     back: '← Torna al catalogo',
     more: 'Mostra altri',
+    continueWatching: 'Continua a guardare',
     detailLoading: 'Caricamento…',
     season: 'Stagione',
     episodeOne: '1 episodio',
@@ -60,6 +62,7 @@ const I18N = {
     episodes: '▶ Episodes',
     back: '← Back to catalog',
     more: 'Show more',
+    continueWatching: 'Continue watching',
     detailLoading: 'Loading…',
     season: 'Season',
     episodeOne: '1 episode',
@@ -91,6 +94,8 @@ const els = {
   status: document.getElementById('status'),
   results: document.getElementById('results'),
   more: document.getElementById('more'),
+  recent: document.getElementById('recent'),
+  recentTrack: document.getElementById('recent-track'),
   catalog: document.getElementById('catalog'),
   detail: document.getElementById('detail'),
   back: document.getElementById('back'),
@@ -133,11 +138,97 @@ function applyI18n() {
     option.classList.toggle('is-active', active);
     option.setAttribute('aria-selected', String(active));
   }
+  renderRecent();
 }
 
 function closeLangMenu() {
   els.langMenu.hidden = true;
   els.langButton.setAttribute('aria-expanded', 'false');
+}
+
+function readRecent() {
+  try {
+    const list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function remember(item) {
+  const key = `${state.lang}:${item.mediaType}:${item.tmdb_id}`;
+  const entry = {
+    key,
+    lang: state.lang,
+    tmdb_id: item.tmdb_id,
+    imdb_id: item.imdb_id || null,
+    mediaType: item.mediaType,
+    title: item.title || '',
+    year: item.year || '',
+    poster: item.poster || null,
+    s: item.s,
+    e: item.e,
+    at: Date.now(),
+  };
+  const list = readRecent().filter(item => item.key !== key);
+  list.unshift(entry);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 20))); } catch {}
+  renderRecent();
+}
+
+function recentHref(entry) {
+  if (entry.mediaType === 'movie') {
+    return entry.lang === 'it'
+      ? `https://${VIX}/movie/${entry.imdb_id || entry.tmdb_id}?lang=it`
+      : `https://${VIDSRC}/embed/movie/${entry.tmdb_id}`;
+  }
+  if (!entry.s || !entry.e) return `#tv/${entry.tmdb_id}`;
+  return episodeUrl(entry.tmdb_id, entry.s, entry.e);
+}
+
+function recentCard(entry) {
+  const link = document.createElement('a');
+  link.className = 'recent-card';
+  link.href = recentHref(entry);
+  if (!link.getAttribute('href').startsWith('#')) {
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
+  if (entry.poster) {
+    const img = document.createElement('img');
+    img.src = `${IMG_CARD}${entry.poster}`;
+    img.alt = '';
+    img.loading = 'eager';
+    img.decoding = 'async';
+    link.append(img);
+  } else {
+    const thumb = document.createElement('span');
+    thumb.className = 'recent-thumb';
+    thumb.textContent = '▶';
+    link.append(thumb);
+  }
+
+  const text = document.createElement('span');
+  text.className = 'recent-text';
+  const kind = document.createElement('span');
+  kind.className = 'recent-kind';
+  kind.textContent = entry.mediaType === 'tv'
+    ? `${t('tv')}${entry.s ? ` · S${String(entry.s).padStart(2, '0')}E${String(entry.e).padStart(2, '0')}` : ''}`
+    : t('movies');
+  const title = document.createElement('span');
+  title.className = 'recent-title';
+  title.textContent = entry.title || t('untitled');
+  text.append(kind, title);
+  link.append(text);
+  return link;
+}
+
+function renderRecent() {
+  const entries = readRecent()
+    .filter(entry => entry.lang === state.lang)
+    .slice(0, 12);
+  els.recent.hidden = !entries.length;
+  els.recentTrack.replaceChildren(...entries.map(recentCard));
 }
 
 function providerUrl(item) {
@@ -198,7 +289,9 @@ function card(item) {
   el.className = 'card';
   const isTv = item.mediaType === 'tv';
   const url = providerUrl(item);
-  el.append(posterNode(item, url, !isTv));
+  const poster = posterNode(item, url, !isTv);
+  if (!isTv) poster.addEventListener('click', () => remember(item));
+  el.append(poster);
 
   const top = document.createElement('div');
   top.className = 'card-top';
@@ -234,6 +327,11 @@ function card(item) {
     play.rel = 'noopener noreferrer';
   }
   play.textContent = isTv ? t('episodes') : t('watch');
+
+  if (!isTv) {
+    titleLink.addEventListener('click', () => remember(item));
+    play.addEventListener('click', () => remember(item));
+  }
 
   body.append(title, play);
   el.append(top, body);
@@ -414,6 +512,16 @@ async function showDetail(id) {
         link.textContent = `E${String(episode.e).padStart(2, '0')}`;
         link.title = `${t('season')} ${episode.s} — E${episode.e}`;
         link.setAttribute('aria-label', `${t('season')} ${episode.s} E${episode.e}`);
+        link.addEventListener('click', () => remember({
+          mediaType: 'tv',
+          tmdb_id: Number(id),
+          imdb_id: null,
+          title,
+          year: info && info.year ? info.year : '',
+          poster: info && info.poster ? info.poster : null,
+          s: episode.s,
+          e: episode.e,
+        }));
         grid.append(link);
       }
       section.append(heading, grid);
