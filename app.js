@@ -265,6 +265,7 @@ function isStandalone() {
 }
 
 function externalLink(url) {
+  if (state.lang === 'en' && isIOS() && url.startsWith(`https://${VIDSRC}/`)) return url;
   return isIOS() || isStandalone() ? REDIRECT + encodeURIComponent(url) : url;
 }
 
@@ -672,6 +673,16 @@ async function setLang(lang) {
   showCatalog(false);
   await load(state.type);
 }
+
+document.addEventListener('click', event => {
+  if (state.lang !== 'en' || !isIOS()) return;
+  const link = event.target.closest('a[href]');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || !href.startsWith(`https://${VIDSRC}/`)) return;
+  event.preventDefault();
+  location.href = href;
+});
 
 els.langButton.addEventListener('click', event => {
   event.stopPropagation();
