@@ -949,7 +949,7 @@ document.addEventListener('click', event => {
 });
 
 document.addEventListener('click', event => {
-  if (!isIOS()) return;
+  if (!isIOS() || !isStandalone()) return;
   const link = event.target.closest('a[href]');
   if (!link) return;
   const href = link.getAttribute('href');
