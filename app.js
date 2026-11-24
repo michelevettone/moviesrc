@@ -3,6 +3,7 @@ const IMG_CARD = 'https://image.tmdb.org/t/p/w185';
 const IMG_DETAIL = 'https://image.tmdb.org/t/p/w342';
 const VIX = 'vixsrc.to';
 const VIDSRC = 'vidsrc.sh';
+const FILMEZ = 'filmez.club';
 const LANG_KEY = 'moviesrc-lang';
 const RECENT_KEY = 'moviesrc-recent';
 const BROWSER_KEY = 'moviesrc-browser';
@@ -33,6 +34,8 @@ const I18N = {
     searchError: 'Errore di ricerca: ',
     enSoon: 'Catalogo inglese in preparazione. Riprova tra poco.',
     watch: '▶ Guarda ↗',
+    filmez: '▶ Filmez ↗',
+    filmezSearch: '▶ Cerca su Filmez ↗',
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
     episodes: '▶ Episodi',
@@ -52,7 +55,7 @@ const I18N = {
     error: 'Errore',
     untitled: 'Senza titolo',
     footer1: 'Catalogo aggiornato automaticamente ogni giorno.',
-    footer2: 'Fonti: vixsrc (italiano) e vidsrc (inglese). I link si aprono in una nuova scheda.',
+    footer2: 'Fonti: vixsrc (italiano), vidsrc (inglese) e Filmez (film, solo italiano). I link si aprono in una nuova scheda.',
   },
   en: {
     title: 'moviesrc — movies and TV shows',
@@ -97,7 +100,7 @@ const I18N = {
     error: 'Error',
     untitled: 'Untitled',
     footer1: 'Catalog refreshed automatically every day.',
-    footer2: 'Sources: vixsrc (Italian) and vidsrc (English). Links open in a new tab.',
+    footer2: 'Sources: vixsrc (Italian), vidsrc (English) and Filmez (movies, Italian only). Links open in a new tab.',
   },
 };
 
@@ -135,6 +138,7 @@ const els = {
   detailMeta: document.getElementById('detail-meta'),
   detailPoster: document.getElementById('detail-poster'),
   detailWatch: document.getElementById('detail-watch'),
+  detailFilmez: document.getElementById('detail-filmez'),
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
 
   detailLast: document.getElementById('detail-last'),
@@ -323,6 +327,66 @@ function episodeUrl(showId, season, episode) {
   return state.lang === 'it'
     ? `https://${VIX}/tv/${showId}/${season}/${episode}?lang=it`
     : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
+}
+
+const FILMEZ_CACHE = new Map();
+
+function filmzKey(value) {
+  const text = new DOMParser().parseFromString(String(value ?? ''), 'text/html').body.textContent;
+  return normalize(text).replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function filmzEntry(row) {
+  const key = filmzKey(row.title && row.title.rendered);
+  const match = key.match(/^(.*?)\s+((?:19|20)\d{2})(?:\s+(?:sub\s+)?ita)?$/);
+  let link = null;
+  try {
+    const url = new URL(row.link);
+    if (url.protocol === 'https:' && url.hostname === FILMEZ) link = url.href;
+  } catch {}
+  return { link, title: match ? match[1] : key, year: match ? Number(match[2]) : 0 };
+}
+
+async function filmzDirectLink(item) {
+  const id = String(item.tmdb_id);
+  if (FILMEZ_CACHE.has(id)) return FILMEZ_CACHE.get(id);
+  const query = filmzKey(item.title);
+  if (query.length < 2) return null;
+  const params = new URLSearchParams({
+    search: query,
+    search_columns: 'post_title',
+    per_page: '10',
+    _fields: 'link,title',
+  });
+  try {
+    const response = await fetch(`https://${FILMEZ}/wp-json/wp/v2/movie?${params}`);
+    if (!response.ok) return null;
+    const rows = await response.json();
+    const year = Number(item.year) || 0;
+    const queryWords = new Set(query.split(' '));
+    let best = null;
+    for (const row of rows) {
+      const entry = filmzEntry(row);
+      if (!entry.link) continue;
+      const diff = year && entry.year ? Math.abs(entry.year - year) : 0;
+      if (year && entry.year && diff > 1) continue;
+      const words = new Set(entry.title.split(' '));
+      const shared = [...queryWords].filter(word => words.has(word)).length;
+      const jaccard = shared / new Set([...queryWords, ...words]).size;
+      const score = entry.title === query ? 3
+        : entry.title.startsWith(`${query} `) || query.startsWith(`${entry.title} `) ? 2
+        : jaccard >= 0.6 ? 1
+        : 0;
+      if (!score) continue;
+      const rank = score * 10 - diff;
+      if (!best || rank > best.rank) best = { rank, link: entry.link };
+    }
+    const link = best ? best.link : null;
+    FILMEZ_CACHE.set(id, link);
+    return link;
+  } catch {
+    return null;
+  }
 }
 
 function isIOS() {
@@ -569,6 +633,9 @@ async function showDetail(id) {
   els.detailResume.hidden = true;
   els.detailResume.removeAttribute('href');
   els.detailResume.textContent = '';
+  els.detailFilmez.hidden = true;
+  els.detailFilmez.removeAttribute('href');
+  els.detailFilmez.textContent = '';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -728,6 +795,9 @@ async function showMovieDetail(id) {
   els.detailWatch.hidden = true;
   els.detailWatch.removeAttribute('href');
   els.detailWatch.onclick = null;
+  els.detailFilmez.hidden = true;
+  els.detailFilmez.removeAttribute('href');
+  els.detailFilmez.textContent = '';
   els.detailLast.hidden = true;
   els.detailResume.hidden = true;
   els.detailOverview.hidden = true;
@@ -760,6 +830,17 @@ async function showMovieDetail(id) {
       els.detailWatch.href = externalLink(providerUrl(item));
       els.detailWatch.textContent = t('watch');
       els.detailWatch.onclick = () => remember(item);
+    }
+
+    if (item && state.lang === 'it' && item.title) {
+      els.detailFilmez.hidden = false;
+      els.detailFilmez.href = `https://${FILMEZ}/?s=${encodeURIComponent(item.title)}&post_type=movie`;
+      els.detailFilmez.textContent = t('filmezSearch');
+      filmzDirectLink(item).then(link => {
+        if (!link || state.detailId !== movieKey) return;
+        els.detailFilmez.href = link;
+        els.detailFilmez.textContent = t('filmez');
+      });
     }
 
     els.detailOverview.hidden = false;
@@ -851,7 +932,7 @@ document.addEventListener('click', event => {
   const link = event.target.closest('a[href]');
   if (!link) return;
   const href = link.getAttribute('href');
-  if (!href || !/^https:\/\/(vixsrc\.to|vidsrc\.sh)\//.test(href)) return;
+  if (!href || !/^https:\/\/(vixsrc\.to|vidsrc\.sh|filmez\.club)\//.test(href)) return;
   const browser = getBrowser();
   if (browser === 'system') return;
   if (browser === 'chrome' && /CriOS/.test(navigator.userAgent)) return;

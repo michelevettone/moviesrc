@@ -1,9 +1,10 @@
 # moviesrc
 
-A static movie and TV catalog for GitHub Pages with two providers:
+A static movie and TV catalog for GitHub Pages with three sources:
 
 - **Italian** → vixsrc catalog and player (`?lang=it`)
 - **English** → full vidsrc catalog and player
+- **Filmez** → Italian movies-only alternative link on movie detail pages
 
 The initial language comes from the system (`it*` → Italian, anything else → English) and can be changed from the dropdown in the top-right corner. The choice is persisted in `localStorage`.
 
@@ -16,6 +17,7 @@ Each TV show has an internal page with every available episode (`#tv/{tmdbId}`);
 - Internal movie detail pages (`#movie/{id}`) with localized plot, runtime, genres and an inline YouTube trailer when available. Detail data is fetched on demand through the Cloudflare Worker.
 - Lists sorted by release date, newest first.
 - "Continue watching" carousel based on the last opened movies/episodes (stored in `localStorage`; no playback position yet). TV entries open the show page, highlight the last opened episode and offer a quick "resume from next episode" button.
+- Filmez alternative link on Italian movie detail pages, resolved on demand through Filmez's public WordPress REST API; falls back to a Filmez search link.
 - iOS browser picker (Chrome, Safari, Brave, Firefox, Edge, Web Video Cast or system browser) for external provider links, persisted in `localStorage`. It is shown only when the site runs as an installed iOS PWA.
 - Responsive card grid, poster overlays, lazy-free eager thumbnails at the correct size.
 - Installable PWA with service worker, manifest, icons and safe-area support.
@@ -54,6 +56,7 @@ The GitHub Actions workflow uses the repository secret `TMDB_TOKEN`; the token i
 - vidsrc does **not** expose audio-track selection; English mode uses the original/English audio. Subtitle language can be selected in the player.
 - vidsrc serves ads and is embedded directly from `vidsrc.sh` (not the `vidsrc.mov` wrapper).
 - AirPlay from the vixsrc player may send audio only; use screen mirroring for video.
+- **Filmez (IT)**: movies-only Italian catalog, queried live from the browser (its REST API allows CORS), so it is not part of the daily data files. Movie details link to the Filmez film page, matched by title and year. Filmez's own video links go through the `uprot.net` captcha shortener and are not extracted.
 - "Continue watching" tracks what was opened, not the exact playback position.
 
 This product uses the TMDB API but is not endorsed or certified by TMDB.
