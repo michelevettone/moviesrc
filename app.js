@@ -2,7 +2,8 @@ const PAGE_SIZE = 48;
 const IMG_CARD = 'https://image.tmdb.org/t/p/w185';
 const IMG_DETAIL = 'https://image.tmdb.org/t/p/w342';
 const VIX = 'vixsrc.to';
-const VIDSRC = 'vidsrc.sh';
+const VIDFAST = 'vidfast.vc';
+const VIDLINK = 'vidlink.pro';
 const FILMEZ = 'filmez.club';
 const WORKER = 'https://moviesrc.michelevettone.com';
 const LANG_KEY = 'moviesrc-lang';
@@ -56,7 +57,7 @@ const I18N = {
     error: 'Errore',
     untitled: 'Senza titolo',
     footer1: 'Catalogo aggiornato automaticamente ogni giorno.',
-    footer2: 'Fonti: vixsrc (italiano), vidsrc (inglese) e Filmez (film, solo italiano). I link si aprono in una nuova scheda.',
+    footer2: 'Fonti: vixsrc (italiano), VidFast/VidLink (inglese) e Filmez (film, solo italiano). I link si aprono in una nuova scheda.',
   },
   en: {
     title: 'moviesrc — movies and TV shows',
@@ -82,6 +83,7 @@ const I18N = {
     searchError: 'Search error: ',
     enSoon: 'English catalog is being prepared. Try again shortly.',
     watch: '▶ Watch ↗',
+    vidlink: '▶ VidLink ↗',
     details: '▶ Details',
     trailer: '▶ Trailer',
     episodes: '▶ Episodes',
@@ -101,7 +103,7 @@ const I18N = {
     error: 'Error',
     untitled: 'Untitled',
     footer1: 'Catalog refreshed automatically every day.',
-    footer2: 'Sources: vixsrc (Italian), vidsrc (English) and Filmez (movies, Italian only). Links open in a new tab.',
+    footer2: 'Sources: vixsrc (Italian), VidFast/VidLink (English) and Filmez (movies, Italian only). Links open in a new tab.',
   },
 };
 
@@ -140,6 +142,7 @@ const els = {
   detailPoster: document.getElementById('detail-poster'),
   detailWatch: document.getElementById('detail-watch'),
   detailFilmez: document.getElementById('detail-filmez'),
+  detailVidlink: document.getElementById('detail-vidlink'),
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
 
   detailLast: document.getElementById('detail-last'),
@@ -321,13 +324,13 @@ function renderRecent() {
 function providerUrl(item) {
   if (item.mediaType === 'tv') return `#tv/${item.tmdb_id}`;
   if (state.lang === 'it') return `https://${VIX}/movie/${item.imdb_id || item.tmdb_id}?lang=it`;
-  return `https://${VIDSRC}/embed/movie/${item.tmdb_id}`;
+  return `https://${VIDFAST}/movie/${item.tmdb_id}`;
 }
 
 function episodeUrl(showId, season, episode) {
   return state.lang === 'it'
     ? `https://${VIX}/tv/${showId}/${season}/${episode}?lang=it`
-    : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
+    : `https://${VIDFAST}/tv/${showId}/${season}/${episode}`;
 }
 
 const FILMEZ_CACHE = new Map();
@@ -644,6 +647,9 @@ async function showDetail(id) {
   els.detailFilmez.removeAttribute('aria-disabled');
   els.detailFilmez.classList.remove('is-loading');
   els.detailFilmez.textContent = '';
+  els.detailVidlink.hidden = true;
+  els.detailVidlink.removeAttribute('href');
+  els.detailVidlink.textContent = '';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -809,6 +815,9 @@ async function showMovieDetail(id) {
   els.detailFilmez.removeAttribute('aria-disabled');
   els.detailFilmez.classList.remove('is-loading');
   els.detailFilmez.textContent = '';
+  els.detailVidlink.hidden = true;
+  els.detailVidlink.removeAttribute('href');
+  els.detailVidlink.textContent = '';
   els.detailLast.hidden = true;
   els.detailResume.hidden = true;
   els.detailOverview.hidden = true;
@@ -867,6 +876,12 @@ async function showMovieDetail(id) {
         els.detailFilmez.href = link;
         els.detailFilmez.textContent = t('filmez');
       });
+    }
+
+    if (item && state.lang === 'en') {
+      els.detailVidlink.hidden = false;
+      els.detailVidlink.href = `https://${VIDLINK}/movie/${item.tmdb_id}`;
+      els.detailVidlink.textContent = t('vidlink');
     }
 
     els.detailOverview.hidden = false;
@@ -958,7 +973,7 @@ document.addEventListener('click', event => {
   const link = event.target.closest('a[href]');
   if (!link) return;
   const href = link.getAttribute('href');
-  if (!href || !/^https:\/\/(vixsrc\.to|vidsrc\.sh|filmez\.club)\//.test(href)) return;
+  if (!href || !/^https:\/\/(vixsrc\.to|vidfast\.(vc|pro)|vidlink\.pro|filmez\.club)\//.test(href)) return;
   const browser = getBrowser();
   if (browser === 'system') return;
   if (browser === 'chrome' && /CriOS/.test(navigator.userAgent)) return;
