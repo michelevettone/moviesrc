@@ -37,8 +37,6 @@ const I18N = {
     watch: '▶ Guarda ↗',
     filmez: '▶ Filmez ↗',
     filmezLoading: 'Filmez',
-    cinemacity: '▶ CinemaCity',
-    cinemacityLoading: 'CinemaCity',
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
     episodes: '▶ Episodi',
@@ -84,8 +82,6 @@ const I18N = {
     searchError: 'Search error: ',
     enSoon: 'English catalog is being prepared. Try again shortly.',
     watch: '▶ Watch ↗',
-    cinemacity: '▶ CinemaCity',
-    cinemacityLoading: 'CinemaCity',
     details: '▶ Details',
     trailer: '▶ Trailer',
     episodes: '▶ Episodes',
@@ -144,7 +140,6 @@ const els = {
   detailPoster: document.getElementById('detail-poster'),
   detailWatch: document.getElementById('detail-watch'),
   detailFilmez: document.getElementById('detail-filmez'),
-  detailCC: document.getElementById('detail-cc'),
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
 
   detailLast: document.getElementById('detail-last'),
@@ -399,25 +394,6 @@ async function filmzDirectLink(item) {
   }
 }
 
-const CC_CACHE = new Map();
-
-async function ccDirectLink(item) {
-  const id = String(item.tmdb_id || '');
-  if (!/^\d+$/.test(id)) return null;
-  if (CC_CACHE.has(id)) return CC_CACHE.get(id);
-  try {
-    const response = await fetch(`${WORKER}/cc/movie/${id}`);
-    if (!response.ok) return null;
-    const data = await response.json();
-    if (!data || !data.url) return null;
-    const result = { url: data.url, quality: data.quality || '' };
-    CC_CACHE.set(id, result);
-    return result;
-  } catch {
-    return null;
-  }
-}
-
 function isIOS() {
   return /iP(hone|ad|od)/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -668,13 +644,6 @@ async function showDetail(id) {
   els.detailFilmez.removeAttribute('aria-disabled');
   els.detailFilmez.classList.remove('is-loading');
   els.detailFilmez.textContent = '';
-  els.detailCC.hidden = true;
-  els.detailCC.removeAttribute('href');
-  els.detailCC.removeAttribute('aria-busy');
-  els.detailCC.removeAttribute('aria-disabled');
-  els.detailCC.classList.remove('is-loading');
-  els.detailCC.textContent = '';
-  els.detailCC.onclick = null;
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
 
@@ -840,13 +809,6 @@ async function showMovieDetail(id) {
   els.detailFilmez.removeAttribute('aria-disabled');
   els.detailFilmez.classList.remove('is-loading');
   els.detailFilmez.textContent = '';
-  els.detailCC.hidden = true;
-  els.detailCC.removeAttribute('href');
-  els.detailCC.removeAttribute('aria-busy');
-  els.detailCC.removeAttribute('aria-disabled');
-  els.detailCC.classList.remove('is-loading');
-  els.detailCC.textContent = '';
-  els.detailCC.onclick = null;
   els.detailLast.hidden = true;
   els.detailResume.hidden = true;
   els.detailOverview.hidden = true;
@@ -904,33 +866,6 @@ async function showMovieDetail(id) {
         }
         els.detailFilmez.href = link;
         els.detailFilmez.textContent = t('filmez');
-      });
-    }
-
-    if (item && state.lang === 'it' && item.title) {
-      els.detailCC.hidden = false;
-      els.detailCC.removeAttribute('href');
-      els.detailCC.setAttribute('aria-busy', 'true');
-      els.detailCC.setAttribute('aria-disabled', 'true');
-      els.detailCC.classList.add('is-loading');
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-hidden', 'true');
-      els.detailCC.textContent = t('cinemacityLoading');
-      els.detailCC.append(spinner);
-      ccDirectLink(item).then(link => {
-        if (state.detailId !== movieKey) return;
-        els.detailCC.classList.remove('is-loading');
-        els.detailCC.removeAttribute('aria-busy');
-        els.detailCC.removeAttribute('aria-disabled');
-        if (!link) {
-          els.detailCC.hidden = true;
-          els.detailCC.textContent = '';
-          return;
-        }
-        els.detailCC.href = link.url;
-        els.detailCC.textContent = `${t('cinemacity')}${link.quality ? ` ${link.quality}` : ''} ↗`;
-        els.detailCC.onclick = () => remember(item);
       });
     }
 
