@@ -35,7 +35,7 @@ const I18N = {
     enSoon: 'Catalogo inglese in preparazione. Riprova tra poco.',
     watch: '▶ Guarda ↗',
     filmez: '▶ Filmez ↗',
-    filmezSearch: '▶ Cerca su Filmez ↗',
+    filmezLoading: 'Filmez',
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
     episodes: '▶ Episodi',
@@ -635,6 +635,9 @@ async function showDetail(id) {
   els.detailResume.textContent = '';
   els.detailFilmez.hidden = true;
   els.detailFilmez.removeAttribute('href');
+  els.detailFilmez.removeAttribute('aria-busy');
+  els.detailFilmez.removeAttribute('aria-disabled');
+  els.detailFilmez.classList.remove('is-loading');
   els.detailFilmez.textContent = '';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
@@ -797,6 +800,9 @@ async function showMovieDetail(id) {
   els.detailWatch.onclick = null;
   els.detailFilmez.hidden = true;
   els.detailFilmez.removeAttribute('href');
+  els.detailFilmez.removeAttribute('aria-busy');
+  els.detailFilmez.removeAttribute('aria-disabled');
+  els.detailFilmez.classList.remove('is-loading');
   els.detailFilmez.textContent = '';
   els.detailLast.hidden = true;
   els.detailResume.hidden = true;
@@ -834,10 +840,25 @@ async function showMovieDetail(id) {
 
     if (item && state.lang === 'it' && item.title) {
       els.detailFilmez.hidden = false;
-      els.detailFilmez.href = `https://${FILMEZ}/?s=${encodeURIComponent(item.title)}&post_type=movie`;
-      els.detailFilmez.textContent = t('filmezSearch');
+      els.detailFilmez.removeAttribute('href');
+      els.detailFilmez.setAttribute('aria-busy', 'true');
+      els.detailFilmez.setAttribute('aria-disabled', 'true');
+      els.detailFilmez.classList.add('is-loading');
+      const spinner = document.createElement('span');
+      spinner.className = 'spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      els.detailFilmez.textContent = t('filmezLoading');
+      els.detailFilmez.append(spinner);
       filmzDirectLink(item).then(link => {
-        if (!link || state.detailId !== movieKey) return;
+        if (state.detailId !== movieKey) return;
+        els.detailFilmez.classList.remove('is-loading');
+        els.detailFilmez.removeAttribute('aria-busy');
+        els.detailFilmez.removeAttribute('aria-disabled');
+        if (!link) {
+          els.detailFilmez.hidden = true;
+          els.detailFilmez.textContent = '';
+          return;
+        }
         els.detailFilmez.href = link;
         els.detailFilmez.textContent = t('filmez');
       });

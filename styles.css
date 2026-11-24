@@ -230,6 +230,9 @@ body.detail-open .site-header, body.detail-open .footer { display: none; }
   background: transparent; border: 1px solid var(--line); color: var(--text);
 }
 .resume.is-secondary:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+.resume.is-loading { opacity: .7; cursor: default; }
+.resume.is-loading:hover { border-color: var(--line); color: var(--text); filter: none; }
+.resume .spinner { width: 12px; height: 12px; border-width: 2px; margin-left: 7px; }
 .resume[hidden] { display: none; }
 .overview {
   margin: 18px 0 0; max-width: 900px;
