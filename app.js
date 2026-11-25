@@ -28,7 +28,6 @@ const I18N = {
     scriptLabel: 'Scriptable',
     scriptWhy: 'Niente ads: risolve il flusso diretto e lo apre in Safari (AirPlay) o VLC.',
     scriptAdd: 'Aggiungi script',
-    scriptHint: 'Copia lo script e apri Scriptable: incolla e rinomina Moviesrc.',
     scriptModalTitle: 'Aggiungi script',
     scriptModalBody: 'Script copiato. Nella pagina che si apre, incolla e rinomina Moviesrc. Se Scriptable non è installato, OK apre l’App Store.',
     scriptModalError: 'Copia non riuscita. Riprova.',
@@ -83,7 +82,6 @@ const I18N = {
     scriptLabel: 'Scriptable',
     scriptWhy: 'No ads: resolves the direct stream and opens it in Safari (AirPlay) or VLC.',
     scriptAdd: 'Add script',
-    scriptHint: 'Copies the script and opens Scriptable: paste and rename to Moviesrc.',
     scriptModalTitle: 'Add script',
     scriptModalBody: 'Script copied. In the page that opens, paste and rename it Moviesrc. If Scriptable is not installed, OK opens the App Store.',
     scriptModalError: 'Copy failed. Try again.',
@@ -144,7 +142,6 @@ const els = {
   settingsMenu: document.getElementById('settings-menu'),
   browserSetting: document.getElementById('browser-setting'),
   scriptAdd: document.getElementById('script-add'),
-  scriptHint: document.getElementById('script-hint'),
   scriptModal: document.getElementById('script-modal'),
   scriptModalOk: document.getElementById('script-modal-ok'),
   scriptModalBody: document.getElementById('script-modal-body'),
@@ -379,7 +376,7 @@ function playWithScriptable(url) {
 
 async function loadScriptText() {
   if (scriptText) return scriptText;
-  const response = await fetch('scriptable/Moviesrc.script?v=1', { cache: 'no-store' });
+  const response = await fetch('scriptable/Moviesrc.script?v=2', { cache: 'no-store' });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   scriptText = await response.text();
   return scriptText;
@@ -400,8 +397,7 @@ function closeScriptModal(openApp) {
 function addScript() {
   els.scriptModalBody.textContent = t('scriptModalBody');
   openScriptModal();
-  const fail = error => {
-    els.scriptHint.textContent = `${t('error')}: ${error.message}`;
+  const fail = () => {
     els.scriptModalBody.textContent = t('scriptModalError');
   };
   const copy = text => {
@@ -415,7 +411,7 @@ function addScript() {
   }).catch(fail);
 }
 
-fetch('scriptable/Moviesrc.script?v=1')
+fetch('scriptable/Moviesrc.script?v=2')
   .then(response => response.ok ? response.text() : '')
   .then(text => { scriptText = text; })
   .catch(() => {});
