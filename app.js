@@ -9,6 +9,7 @@ const WORKER = 'https://moviesrc.michelevettone.com';
 const LANG_KEY = 'moviesrc-lang';
 const RECENT_KEY = 'moviesrc-recent';
 const BROWSER_KEY = 'moviesrc-browser';
+const INSTALL_KEY = 'moviesrc-install-dismissed';
 const SCRIPTABLE_STORE = 'https://apps.apple.com/app/scriptable/id1405459188';
 const BROWSERS = new Set(['chrome', 'safari', 'brave', 'brave-beta', 'firefox', 'edge', 'wvc', 'system']);
 
@@ -25,6 +26,10 @@ const I18N = {
     openWith: 'Apri i link con',
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
+    installTitle: 'Installa moviesrc',
+    installBody: 'Tocca Condividi e poi Aggiungi alla schermata Home.',
+    installAndroid: 'Apri il menu del browser e scegli Installa app (o Aggiungi alla schermata Home).',
+    installClose: 'Chiudi',
     scriptLabel: 'Scriptable',
     scriptWhy: 'Niente ads: risolve il flusso diretto e lo apre in Safari (AirPlay) o VLC.',
     scriptAdd: 'Aggiungi script',
@@ -79,6 +84,10 @@ const I18N = {
     openWith: 'Open links with',
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
+    installTitle: 'Install moviesrc',
+    installBody: 'Tap Share, then Add to Home Screen.',
+    installAndroid: 'Open the browser menu and choose Install app (or Add to Home Screen).',
+    installClose: 'Close',
     scriptLabel: 'Scriptable',
     scriptWhy: 'No ads: resolves the direct stream and opens it in Safari (AirPlay) or VLC.',
     scriptAdd: 'Add script',
@@ -145,6 +154,9 @@ const els = {
   scriptModal: document.getElementById('script-modal'),
   scriptModalOk: document.getElementById('script-modal-ok'),
   scriptModalBody: document.getElementById('script-modal-body'),
+  installBanner: document.getElementById('install-banner'),
+  installBody: document.getElementById('install-body'),
+  installClose: document.getElementById('install-close'),
   browserSelect: document.getElementById('browser-select'),
   appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
@@ -211,6 +223,21 @@ function applyI18n() {
     option.setAttribute('aria-selected', String(active));
   }
   renderRecent();
+  updateInstallBannerText();
+}
+
+function updateInstallBannerText() {
+  if (!els.installBanner || els.installBanner.hidden) return;
+  const android = /Android/i.test(navigator.userAgent);
+  els.installBody.textContent = t(android ? 'installAndroid' : 'installBody');
+}
+
+function showInstallBanner() {
+  if (isStandalone()) return;
+  if (!isIOS() && !/Android/i.test(navigator.userAgent)) return;
+  try { if (localStorage.getItem(INSTALL_KEY) === '1') return; } catch {}
+  els.installBanner.hidden = false;
+  updateInstallBannerText();
 }
 
 function closeLangMenu() {
@@ -1155,6 +1182,11 @@ els.langButton.addEventListener('click', event => {
   els.langButton.setAttribute('aria-expanded', String(open));
 });
 
+els.installClose.addEventListener('click', () => {
+  els.installBanner.hidden = true;
+  try { localStorage.setItem(INSTALL_KEY, '1'); } catch {}
+});
+
 els.scriptAdd.addEventListener('click', event => {
   event.preventDefault();
   addScript();
@@ -1271,9 +1303,11 @@ els.browserSelect.value = getBrowser();
 const appScript = document.querySelector('script[src*="app.js"]');
 const appVersion = appScript && appScript.src.match(/[?&]v=(\d+)/);
 if (appVersion) els.appVersion.textContent = `build ${appVersion[1]}`;
-els.settingsButton.hidden = !isIOS();
+const showSettings = isIOS() && isStandalone();
+els.settingsButton.hidden = !showSettings;
 els.browserSetting.hidden = !isStandalone();
-if (!isIOS()) closeSettings();
+if (!showSettings) closeSettings();
+showInstallBanner();
 updateSearchClear();
 applyI18n();
 window.addEventListener('hashchange', route);

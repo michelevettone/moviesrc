@@ -293,3 +293,16 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .modal-card p { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .modal-card .resume { width: 100%; justify-content: center; }
 body.modal-open { overflow: hidden; }
+
+.install-banner {
+  position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 40; display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel); box-shadow: 0 12px 30px #0009;
+}
+.install-banner[hidden] { display: none; }
+.install-banner > div { flex: 1; min-width: 0; }
+.install-banner strong { font-size: 13px; }
+.install-banner p { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.install-banner .icon-button { flex: 0 0 32px; width: 32px; height: 32px; font-size: 16px; }
+body.detail-open .install-banner { display: none; }

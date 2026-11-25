@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=48">
+  <link rel="stylesheet" href="styles.css?v=49">
 </head>
 <body>
   <header class="site-header">
@@ -125,6 +125,14 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
+  <div id="install-banner" class="install-banner" role="region" aria-label="Installa moviesrc" hidden>
+    <div>
+      <strong data-i18n="installTitle">Installa moviesrc</strong>
+      <p id="install-body" data-i18n="installBody">Tocca Condividi e poi Aggiungi alla schermata Home.</p>
+    </div>
+    <button id="install-close" class="icon-button" type="button" data-i18n-aria="installClose" aria-label="Chiudi">×</button>
+  </div>
+
   <div id="script-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="script-modal-title" aria-describedby="script-modal-body" hidden>
     <div class="modal-card">
       <h2 id="script-modal-title" data-i18n="scriptModalTitle">Aggiungi script</h2>
@@ -133,6 +141,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=82"></script>
+  <script src="app.js?v=83"></script>
 </body>
 </html>
