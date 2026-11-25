@@ -29,6 +29,7 @@ const I18N = {
     installTitle: 'Installa moviesrc',
     installBody: 'Tocca Condividi e poi Aggiungi alla schermata Home.',
     installAndroid: 'Apri il menu del browser e scegli Installa app (o Aggiungi alla schermata Home).',
+    installSafari: 'Apri il sito in Safari e usa Condividi → Aggiungi alla schermata Home.',
     installClose: 'Chiudi',
     scriptLabel: 'Scriptable',
     scriptWhy: 'Niente ads: risolve il flusso diretto e lo apre in Safari (AirPlay) o VLC.',
@@ -87,6 +88,7 @@ const I18N = {
     installTitle: 'Install moviesrc',
     installBody: 'Tap Share, then Add to Home Screen.',
     installAndroid: 'Open the browser menu and choose Install app (or Add to Home Screen).',
+    installSafari: 'Open this site in Safari and use Share → Add to Home Screen.',
     installClose: 'Close',
     scriptLabel: 'Scriptable',
     scriptWhy: 'No ads: resolves the direct stream and opens it in Safari (AirPlay) or VLC.',
@@ -228,8 +230,11 @@ function applyI18n() {
 
 function updateInstallBannerText() {
   if (!els.installBanner || els.installBanner.hidden) return;
-  const android = /Android/i.test(navigator.userAgent);
-  els.installBody.textContent = t(android ? 'installAndroid' : 'installBody');
+  const ua = navigator.userAgent;
+  let key = 'installBody';
+  if (/Android/i.test(ua)) key = 'installAndroid';
+  else if (isIOS() && /CriOS|FxiOS|EdgiOS|OPiOS|Brave|mercury/i.test(ua)) key = 'installSafari';
+  els.installBody.textContent = t(key);
 }
 
 function showInstallBanner() {
@@ -438,10 +443,12 @@ function addScript() {
   }).catch(fail);
 }
 
-fetch('scriptable/Moviesrc.script?v=2')
-  .then(response => response.ok ? response.text() : '')
-  .then(text => { scriptText = text; })
-  .catch(() => {});
+if (isIOS()) {
+  fetch('scriptable/Moviesrc.script?v=2')
+    .then(response => response.ok ? response.text() : '')
+    .then(text => { scriptText = text; })
+    .catch(() => {});
+}
 
 const VIDLINK_CACHE = new Map();
 
@@ -1303,7 +1310,7 @@ els.browserSelect.value = getBrowser();
 const appScript = document.querySelector('script[src*="app.js"]');
 const appVersion = appScript && appScript.src.match(/[?&]v=(\d+)/);
 if (appVersion) els.appVersion.textContent = `build ${appVersion[1]}`;
-const showSettings = isIOS() && isStandalone();
+const showSettings = isIOS();
 els.settingsButton.hidden = !showSettings;
 els.browserSetting.hidden = !isStandalone();
 if (!showSettings) closeSettings();
