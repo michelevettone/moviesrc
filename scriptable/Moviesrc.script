@@ -1,0 +1,70 @@
+// Variables used by Scriptable.
+// These must be at the top of the file. Do not edit.
+// icon-color: orange; icon-glyph: play;
+
+const VIX = 'https://vixsrc.to';
+const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1';
+
+async function showError(message) {
+  const alert = new Alert();
+  alert.title = 'Moviesrc';
+  alert.message = message;
+  alert.addAction('OK');
+  await alert.present();
+}
+
+async function resolve(input) {
+  const page = String(input || '').trim();
+  if (!page) throw new Error('Nessun link. Apri un film dal sito e tocca Senza ads.');
+
+  // Accetta sia il link del sito sia l'URL API.
+  const apiUrl = page.includes('/api/') ? page : page.replace('vixsrc.to/', 'vixsrc.to/api/');
+  const data = await new Request(apiUrl).loadJSON();
+  if (!data || !data.src) throw new Error('Risposta API senza src.');
+
+  // L'embed risponde 403 senza Referer.
+  const req = new Request(VIX + data.src);
+  req.headers = { Referer: VIX + '/', 'User-Agent': UA };
+  const html = await req.loadString();
+
+  const token = html.match(/'token': '([^']+)'/);
+  const expires = html.match(/'expires': '([0-9]+)'/);
+  const master = html.match(/url: '([^']+)'/);
+  if (!token || !expires || !master) {
+    throw new Error('Token non trovato nella pagina embed (' + html.length + ' caratteri).');
+  }
+
+  return master[1] + '?token=' + token[1] + '&expires=' + expires[1] + '&asn=&cf=1';
+}
+
+async function main() {
+  let input = '';
+  if (typeof args !== 'undefined' && args.queryParameters && args.queryParameters.url) {
+    input = args.queryParameters.url;
+  }
+  if (!input && typeof args !== 'undefined' && args.shortcutParameter) {
+    input = String(args.shortcutParameter);
+  }
+  if (!input) input = Pasteboard.paste();
+
+  const finalUrl = await resolve(input);
+
+  const alert = new Alert();
+  alert.title = 'Moviesrc';
+  alert.message = 'Scegli come aprire il film';
+  alert.addAction('Safari (AirPlay)');
+  alert.addAction('VLC');
+  alert.addAction('Copia link');
+  alert.addCancelAction('Annulla');
+  const choice = await alert.present();
+
+  if (choice === 0) {
+    Safari.open(finalUrl);
+  } else if (choice === 1) {
+    Safari.open('vlc-x-callback://x-callback-url/stream?url=' + encodeURIComponent(finalUrl));
+  } else if (choice === 2) {
+    Pasteboard.copy(finalUrl);
+  }
+}
+
+main().catch(error => showError(error.message || String(error)));

@@ -24,9 +24,9 @@ const I18N = {
     openWith: 'Apri i link con',
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
-    shortcutLabel: 'Shortcut iOS',
-    shortcutInstall: 'Aggiungi la shortcut',
-    shortcutHint: 'Si apre Shortcuts: tocca Aggiungi. Poi condividi il link del film e scegli Moviesrc.',
+    scriptLabel: 'Scriptable',
+    scriptInstall: 'Scarica lo script',
+    scriptHint: 'Apri il file con Scriptable, poi tocca Senza ads sul film.',
     shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
@@ -75,9 +75,9 @@ const I18N = {
     openWith: 'Open links with',
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
-    shortcutLabel: 'iOS Shortcut',
-    shortcutInstall: 'Add the shortcut',
-    shortcutHint: 'Opens Shortcuts: tap Add. Then share the movie link and choose Moviesrc.',
+    scriptLabel: 'Scriptable',
+    scriptInstall: 'Download the script',
+    scriptHint: 'Open the file with Scriptable, then tap No ads on a movie.',
     shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
@@ -345,7 +345,7 @@ function episodeUrl(showId, season, episode) {
 }
 
 // Passa il link come testo semplice: il share sheet iOS lo converte in RTF e la shortcut fallisce.
-function playWithShortcut(url) {
+function playWithScriptable(url) {
   location.href = `shortcuts://run-shortcut?name=Moviesrc&input=text&text=${encodeURIComponent(url)}`;
 }
 
@@ -764,7 +764,7 @@ async function showDetail(id) {
       const shareTarget = state.lang === 'it' ? (next || current || episodes[0]) : null;
       els.detailShortcut.hidden = !isIOS() || !shareTarget;
       if (shareTarget) {
-        els.detailShortcut.onclick = () => playWithShortcut(episodeUrl(id, shareTarget.s, shareTarget.e));
+        els.detailShortcut.onclick = () => playWithScriptable(episodeUrl(id, shareTarget.s, shareTarget.e));
       }
     }
 
@@ -905,7 +905,7 @@ async function showMovieDetail(id) {
       els.detailWatch.onclick = () => remember(item);
       if (isIOS() && state.lang === 'it') {
         els.detailShortcut.hidden = false;
-        els.detailShortcut.onclick = () => playWithShortcut(providerUrl(item));
+        els.detailShortcut.onclick = () => playWithScriptable(providerUrl(item));
       }
     }
 
