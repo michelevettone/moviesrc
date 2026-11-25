@@ -483,7 +483,7 @@ function chooseWatch(kind) {
 
 async function loadScriptText() {
   if (scriptText) return scriptText;
-  const response = await fetch('scriptable/Moviesrc.script?v=6', { cache: 'no-store' });
+  const response = await fetch('scriptable/Moviesrc.script?v=7', { cache: 'no-store' });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   scriptText = await response.text();
   return scriptText;
@@ -519,7 +519,7 @@ function addScript() {
 }
 
 if (isIOS()) {
-  fetch('scriptable/Moviesrc.script?v=6')
+  fetch('scriptable/Moviesrc.script?v=7')
     .then(response => response.ok ? response.text() : '')
     .then(text => { scriptText = text; })
     .catch(() => {});

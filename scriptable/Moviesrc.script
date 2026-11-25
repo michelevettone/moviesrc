@@ -58,7 +58,7 @@ async function main() {
   const alert = new Alert();
   alert.title = 'Moviesrc';
   alert.message = 'Scegli come aprire il film';
-  alert.addAction('Apri nel browser');
+  alert.addAction('Apri nel browser (AirPlay)');
   alert.addAction('VLC');
   alert.addAction('Installa VLC');
   alert.addAction('Copia link');
