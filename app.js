@@ -10,6 +10,7 @@ const LANG_KEY = 'moviesrc-lang';
 const RECENT_KEY = 'moviesrc-recent';
 const BROWSER_KEY = 'moviesrc-browser';
 const SCRIPTABLE_STORE = 'https://apps.apple.com/app/scriptable/id1405459188';
+const SCRIPTABLE_KEY = 'moviesrc-scriptable';
 const BROWSERS = new Set(['chrome', 'safari', 'brave', 'brave-beta', 'firefox', 'edge', 'wvc', 'system']);
 
 const I18N = {
@@ -27,8 +28,10 @@ const I18N = {
     systemBrowser: 'Browser di sistema',
     scriptLabel: 'Scriptable',
     scriptStore: 'Installa Scriptable',
-    scriptInstall: 'Scarica lo script',
-    scriptHint: 'Poi apri lo script con Scriptable e tocca Senza ads sul film.',
+    scriptOpen: 'Apri Scriptable',
+    scriptCopy: 'Copia script',
+    scriptHint: 'Copia lo script, incollalo in un nuovo script Scriptable e rinominalo Moviesrc.',
+    scriptCopied: 'Copiato. Apri Scriptable → + → incolla → rinomina Moviesrc.',
     shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
@@ -79,8 +82,10 @@ const I18N = {
     systemBrowser: 'System browser',
     scriptLabel: 'Scriptable',
     scriptStore: 'Install Scriptable',
-    scriptInstall: 'Download the script',
-    scriptHint: 'Then open the script with Scriptable and tap No ads on a movie.',
+    scriptOpen: 'Open Scriptable',
+    scriptCopy: 'Copy script',
+    scriptHint: 'Copy the script, paste it into a new Scriptable script and rename it Moviesrc.',
+    scriptCopied: 'Copied. Open Scriptable → + → paste → rename to Moviesrc.',
     shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
@@ -137,6 +142,9 @@ const els = {
   settingsButton: document.getElementById('settings-button'),
   settingsMenu: document.getElementById('settings-menu'),
   browserSetting: document.getElementById('browser-setting'),
+  scriptableOpen: document.getElementById('scriptable-open'),
+  scriptCopy: document.getElementById('script-copy'),
+  scriptHint: document.getElementById('script-hint'),
   browserSelect: document.getElementById('browser-select'),
   appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
@@ -203,6 +211,7 @@ function applyI18n() {
     option.setAttribute('aria-selected', String(active));
   }
   renderRecent();
+  updateScriptableUI();
 }
 
 function closeLangMenu() {
@@ -347,19 +356,70 @@ function episodeUrl(showId, season, episode) {
     : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
 }
 
-// Lancia lo script Scriptable: legge l'HTML come testo, niente RTF.
-// Se l'app non c'è, dopo 1.5s porta all'App Store.
-function playWithScriptable(url) {
-  if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+let scriptText = '';
+
+function markScriptable() {
+  try { localStorage.setItem(SCRIPTABLE_KEY, '1'); } catch {}
+  updateScriptableUI();
+}
+
+function updateScriptableUI() {
+  if (!els.scriptableOpen) return;
+  let known = false;
+  try { known = localStorage.getItem(SCRIPTABLE_KEY) === '1'; } catch {}
+  els.scriptableOpen.textContent = t(known ? 'scriptOpen' : 'scriptStore');
+}
+
+function launchScriptable(url) {
   let left = false;
-  const onVisibility = () => { if (document.hidden) left = true; };
+  const onVisibility = () => {
+    if (document.hidden) {
+      left = true;
+      markScriptable();
+    }
+  };
   document.addEventListener('visibilitychange', onVisibility);
   setTimeout(() => {
     document.removeEventListener('visibilitychange', onVisibility);
-    if (!left && !document.hidden) location.href = SCRIPTABLE_STORE;
+    if (!left && !document.hidden) {
+      try { localStorage.removeItem(SCRIPTABLE_KEY); } catch {}
+      updateScriptableUI();
+      location.href = SCRIPTABLE_STORE;
+    }
   }, 1500);
-  location.href = `scriptable:///run?scriptName=Moviesrc&url=${encodeURIComponent(url)}`;
+  location.href = url;
 }
+
+// Lancia lo script Scriptable: legge l'HTML come testo, niente RTF.
+function playWithScriptable(url) {
+  if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+  launchScriptable(`scriptable:///run?scriptName=Moviesrc&url=${encodeURIComponent(url)}`);
+}
+
+function openScriptable() {
+  launchScriptable('scriptable:///run?scriptName=Moviesrc');
+}
+
+async function copyScript() {
+  try {
+    let text = scriptText;
+    if (!text) {
+      const response = await fetch('scriptable/Moviesrc.script?v=1', { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      text = await response.text();
+      scriptText = text;
+    }
+    await navigator.clipboard.writeText(text);
+    els.scriptHint.textContent = t('scriptCopied');
+  } catch (error) {
+    els.scriptHint.textContent = `${t('error')}: ${error.message}`;
+  }
+}
+
+fetch('scriptable/Moviesrc.script?v=1')
+  .then(response => response.ok ? response.text() : '')
+  .then(text => { scriptText = text; })
+  .catch(() => {});
 
 const VIDLINK_CACHE = new Map();
 
@@ -1098,6 +1158,16 @@ els.langButton.addEventListener('click', event => {
   const open = els.langMenu.hidden;
   els.langMenu.hidden = !open;
   els.langButton.setAttribute('aria-expanded', String(open));
+});
+
+els.scriptableOpen.addEventListener('click', event => {
+  event.preventDefault();
+  openScriptable();
+});
+
+els.scriptCopy.addEventListener('click', event => {
+  event.preventDefault();
+  copyScript();
 });
 
 els.settingsButton.addEventListener('click', event => {
