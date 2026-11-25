@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=39">
+  <link rel="stylesheet" href="styles.css?v=41">
 </head>
 <body>
   <header class="site-header">
@@ -42,18 +42,25 @@
       <div class="settings">
         <button id="settings-button" class="icon-button" type="button" aria-haspopup="dialog" aria-expanded="false" data-i18n-aria="settings">⚙</button>
         <div id="settings-menu" class="settings-menu" role="dialog" aria-label="Impostazioni" hidden>
-          <label class="setting-label" for="browser-select" data-i18n="openWith">Apri i link con</label>
-          <select id="browser-select" class="browser-select">
-            <option value="chrome">Chrome</option>
-            <option value="safari">Safari</option>
-            <option value="brave">Brave</option>
-            <option value="brave-beta">Brave Beta</option>
-            <option value="firefox">Firefox</option>
-            <option value="edge">Microsoft Edge</option>
-            <option value="wvc">Web Video Cast</option>
-            <option value="system" data-i18n="systemBrowser">Browser di sistema</option>
-          </select>
-          <p class="setting-hint" data-i18n="browserHint">Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.</p>
+          <div id="browser-setting">
+            <label class="setting-label" for="browser-select" data-i18n="openWith">Apri i link con</label>
+            <select id="browser-select" class="browser-select">
+              <option value="chrome">Chrome</option>
+              <option value="safari">Safari</option>
+              <option value="brave">Brave</option>
+              <option value="brave-beta">Brave Beta</option>
+              <option value="firefox">Firefox</option>
+              <option value="edge">Microsoft Edge</option>
+              <option value="wvc">Web Video Cast</option>
+              <option value="system" data-i18n="systemBrowser">Browser di sistema</option>
+            </select>
+            <p class="setting-hint" data-i18n="browserHint">Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.</p>
+          </div>
+          <div id="shortcut-setting">
+            <p class="setting-label" data-i18n="shortcutLabel">Shortcut iOS</p>
+            <a id="shortcut-install" class="setting-link" href="shortcuts/Moviesrc.shortcut?v=3" download="Moviesrc.shortcut" data-i18n="shortcutInstall">Scarica la shortcut</a>
+            <p class="setting-hint" data-i18n="shortcutHint">Copia il link del film o della puntata e lancia Moviesrc: niente ads, con AirPlay.</p>
+          </div>
           <p id="app-version" class="setting-version"></p>
         </div>
       </div>
@@ -98,6 +105,7 @@
           <p id="detail-meta" class="muted"></p>
           <div class="resume-actions">
             <a id="detail-watch" class="resume" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
+            <button id="detail-shortcut" class="resume is-secondary" type="button" hidden data-i18n="shortcutPlay">▶ Senza ads</button>
             <a id="detail-filmez" class="resume is-secondary" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
             <a id="detail-vidlink" class="resume is-secondary" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
             <a id="detail-last" class="resume is-secondary" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
@@ -117,6 +125,6 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=64"></script>
+  <script src="app.js?v=68"></script>
 </body>
 </html>

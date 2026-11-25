@@ -24,6 +24,10 @@ const I18N = {
     openWith: 'Apri i link con',
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
+    shortcutLabel: 'Shortcut iOS',
+    shortcutInstall: 'Scarica la shortcut',
+    shortcutHint: 'Su iOS: condividi il link del film e scegli Moviesrc. Niente ads, con AirPlay.',
+    shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
     results: 'risultati in film e serie',
@@ -71,6 +75,10 @@ const I18N = {
     openWith: 'Open links with',
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
+    shortcutLabel: 'iOS Shortcut',
+    shortcutInstall: 'Download the shortcut',
+    shortcutHint: 'On iOS: share the movie link and choose Moviesrc. No ads, with AirPlay.',
+    shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
     results: 'results in movies and TV shows',
@@ -124,6 +132,7 @@ const els = {
   langCurrent: document.getElementById('lang-current'),
   settingsButton: document.getElementById('settings-button'),
   settingsMenu: document.getElementById('settings-menu'),
+  browserSetting: document.getElementById('browser-setting'),
   browserSelect: document.getElementById('browser-select'),
   appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
@@ -147,6 +156,7 @@ const els = {
 
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
+  detailShortcut: document.getElementById('detail-shortcut'),
   detailOverview: document.getElementById('detail-overview'),
   seasons: document.getElementById('seasons'),
 };
@@ -331,6 +341,15 @@ function episodeUrl(showId, season, episode) {
   return state.lang === 'it'
     ? `https://${VIX}/tv/${showId}/${season}/${episode}?lang=it`
     : `https://${VIDFAST}/tv/${showId}/${season}/${episode}`;
+}
+
+// Condivide il link con la shortcut iOS: niente copia/incolla.
+function playWithShortcut(url) {
+  if (navigator.share) {
+    navigator.share({ url }).catch(() => {});
+    return;
+  }
+  location.href = `shortcuts://run-shortcut?name=Moviesrc&input=text&text=${encodeURIComponent(url)}`;
 }
 
 const FILMEZ_CACHE = new Map();
@@ -641,6 +660,8 @@ async function showDetail(id) {
   els.detailResume.hidden = true;
   els.detailResume.removeAttribute('href');
   els.detailResume.textContent = '';
+  els.detailShortcut.hidden = true;
+  els.detailShortcut.onclick = null;
   els.detailFilmez.hidden = true;
   els.detailFilmez.removeAttribute('href');
   els.detailFilmez.removeAttribute('aria-busy');
@@ -717,6 +738,12 @@ async function showDetail(id) {
       if (next) {
         els.detailResume.href = externalLink(episodeUrl(id, next.s, next.e));
         els.detailResume.textContent = t('resumeNext').replace('{ep}', badge(next));
+      }
+
+      const shareTarget = state.lang === 'it' ? (next || current || episodes[0]) : null;
+      els.detailShortcut.hidden = !isIOS() || !shareTarget;
+      if (shareTarget) {
+        els.detailShortcut.onclick = () => playWithShortcut(episodeUrl(id, shareTarget.s, shareTarget.e));
       }
     }
 
@@ -820,6 +847,8 @@ async function showMovieDetail(id) {
   els.detailVidlink.textContent = '';
   els.detailLast.hidden = true;
   els.detailResume.hidden = true;
+  els.detailShortcut.hidden = true;
+  els.detailShortcut.onclick = null;
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
   resetTrailer();
@@ -850,6 +879,10 @@ async function showMovieDetail(id) {
       els.detailWatch.href = externalLink(providerUrl(item));
       els.detailWatch.textContent = t('watch');
       els.detailWatch.onclick = () => remember(item);
+      if (isIOS() && state.lang === 'it') {
+        els.detailShortcut.hidden = false;
+        els.detailShortcut.onclick = () => playWithShortcut(providerUrl(item));
+      }
     }
 
     if (item && state.lang === 'it' && item.title) {
@@ -1112,9 +1145,9 @@ els.browserSelect.value = getBrowser();
 const appScript = document.querySelector('script[src*="app.js"]');
 const appVersion = appScript && appScript.src.match(/[?&]v=(\d+)/);
 if (appVersion) els.appVersion.textContent = `build ${appVersion[1]}`;
-const showBrowserSetting = isIOS() && isStandalone();
-els.settingsButton.hidden = !showBrowserSetting;
-if (!showBrowserSetting) closeSettings();
+els.settingsButton.hidden = !isIOS();
+els.browserSetting.hidden = !isStandalone();
+if (!isIOS()) closeSettings();
 updateSearchClear();
 applyI18n();
 window.addEventListener('hashchange', route);

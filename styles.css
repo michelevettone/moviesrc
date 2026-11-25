@@ -80,6 +80,9 @@ body {
   background: var(--panel-2); color: var(--text); font: inherit; font-size: 13px;
 }
 .setting-hint { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+#shortcut-setting { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.setting-link { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; }
+.setting-link:hover { text-decoration: underline; }
 .setting-version { margin: 8px 0 0; color: var(--muted); font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .brand-mark {
   flex: 0 0 44px; display: grid; place-items: center; width: 44px; height: 44px;
@@ -234,6 +237,7 @@ body.detail-open .site-header, body.detail-open .footer { display: none; }
 .resume.is-loading:hover { border-color: var(--line); color: var(--text); filter: none; }
 .resume .spinner { width: 12px; height: 12px; border-width: 2px; margin-left: 7px; }
 .resume[hidden] { display: none; }
+button.resume { cursor: pointer; font: inherit; }
 .overview {
   margin: 18px 0 0; max-width: 900px;
   color: var(--text); font-size: 14px; line-height: 1.65;
