@@ -9,6 +9,7 @@ const WORKER = 'https://moviesrc.michelevettone.com';
 const LANG_KEY = 'moviesrc-lang';
 const RECENT_KEY = 'moviesrc-recent';
 const BROWSER_KEY = 'moviesrc-browser';
+const SCRIPTABLE_STORE = 'https://apps.apple.com/app/scriptable/id1405459188';
 const BROWSERS = new Set(['chrome', 'safari', 'brave', 'brave-beta', 'firefox', 'edge', 'wvc', 'system']);
 
 const I18N = {
@@ -25,8 +26,9 @@ const I18N = {
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
     scriptLabel: 'Scriptable',
+    scriptStore: 'Installa Scriptable',
     scriptInstall: 'Scarica lo script',
-    scriptHint: 'Apri il file con Scriptable, poi tocca Senza ads sul film.',
+    scriptHint: 'Poi apri lo script con Scriptable e tocca Senza ads sul film.',
     shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
@@ -76,8 +78,9 @@ const I18N = {
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
     scriptLabel: 'Scriptable',
+    scriptStore: 'Install Scriptable',
     scriptInstall: 'Download the script',
-    scriptHint: 'Open the file with Scriptable, then tap No ads on a movie.',
+    scriptHint: 'Then open the script with Scriptable and tap No ads on a movie.',
     shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
@@ -344,9 +347,18 @@ function episodeUrl(showId, season, episode) {
     : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
 }
 
-// Passa il link come testo semplice: il share sheet iOS lo converte in RTF e la shortcut fallisce.
+// Lancia lo script Scriptable: legge l'HTML come testo, niente RTF.
+// Se l'app non c'è, dopo 1.5s porta all'App Store.
 function playWithScriptable(url) {
-  location.href = `shortcuts://run-shortcut?name=Moviesrc&input=text&text=${encodeURIComponent(url)}`;
+  if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+  let left = false;
+  const onVisibility = () => { if (document.hidden) left = true; };
+  document.addEventListener('visibilitychange', onVisibility);
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', onVisibility);
+    if (!left && !document.hidden) location.href = SCRIPTABLE_STORE;
+  }, 1500);
+  location.href = `scriptable:///run?scriptName=Moviesrc&url=${encodeURIComponent(url)}`;
 }
 
 const VIDLINK_CACHE = new Map();
