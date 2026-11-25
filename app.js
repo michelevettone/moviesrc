@@ -344,12 +344,8 @@ function episodeUrl(showId, season, episode) {
     : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
 }
 
-// Condivide il link con la shortcut iOS: niente copia/incolla.
+// Passa il link come testo semplice: il share sheet iOS lo converte in RTF e la shortcut fallisce.
 function playWithShortcut(url) {
-  if (navigator.share) {
-    navigator.share({ url }).catch(() => {});
-    return;
-  }
   location.href = `shortcuts://run-shortcut?name=Moviesrc&input=text&text=${encodeURIComponent(url)}`;
 }
 
