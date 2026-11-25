@@ -12,6 +12,7 @@ const BROWSER_KEY = 'moviesrc-browser';
 const INSTALL_KEY = 'moviesrc-install-dismissed';
 const SCRIPTABLE_STORE = 'https://apps.apple.com/app/scriptable/id1405459188';
 const BROWSERS = new Set(['chrome', 'safari', 'brave', 'brave-beta', 'firefox', 'edge', 'wvc', 'system']);
+const BROWSER_LABELS = { chrome: 'Chrome', safari: 'Safari', brave: 'Brave', 'brave-beta': 'Brave Beta', firefox: 'Firefox', edge: 'Microsoft Edge', wvc: 'Web Video Cast' };
 
 const I18N = {
   it: {
@@ -269,6 +270,26 @@ function getBrowser() {
   }
 }
 
+function currentBrowserLabel() {
+  const ua = navigator.userAgent;
+  if (/Brave/i.test(ua)) return 'Brave';
+  if (/EdgiOS|Edg\//i.test(ua)) return 'Microsoft Edge';
+  if (/OPiOS|OPR\//i.test(ua)) return 'Opera';
+  if (/CriOS/i.test(ua)) return 'Chrome';
+  if (/FxiOS/i.test(ua)) return 'Firefox';
+  if (/Chrome\//i.test(ua)) return 'Chrome';
+  if (/Safari/i.test(ua)) return 'Safari';
+  return t('systemBrowser');
+}
+
+function browserLabel() {
+  if (isIOS() && isStandalone()) {
+    const key = getBrowser();
+    return key === 'system' ? t('systemBrowser') : (BROWSER_LABELS[key] || key);
+  }
+  return currentBrowserLabel();
+}
+
 function closeSettings() {
   els.settingsMenu.hidden = true;
   els.settingsButton.setAttribute('aria-expanded', 'false');
@@ -435,6 +456,7 @@ function openWatchMenu(context) {
   watchContext = context;
   watchMenuOpen = true;
   els.watchSubtitle.textContent = context.subtitle || '';
+  els.watchOpen.textContent = `${t('watchOpen')} (${browserLabel()})`;
   els.watchScriptable.hidden = !(isIOS() && state.lang === 'it');
   els.watchFilmez.hidden = !context.filmezUrl;
   els.watchMenu.hidden = false;
@@ -461,7 +483,7 @@ function chooseWatch(kind) {
 
 async function loadScriptText() {
   if (scriptText) return scriptText;
-  const response = await fetch('scriptable/Moviesrc.script?v=5', { cache: 'no-store' });
+  const response = await fetch('scriptable/Moviesrc.script?v=6', { cache: 'no-store' });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   scriptText = await response.text();
   return scriptText;
@@ -497,7 +519,7 @@ function addScript() {
 }
 
 if (isIOS()) {
-  fetch('scriptable/Moviesrc.script?v=5')
+  fetch('scriptable/Moviesrc.script?v=6')
     .then(response => response.ok ? response.text() : '')
     .then(text => { scriptText = text; })
     .catch(() => {});
