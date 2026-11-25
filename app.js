@@ -408,7 +408,7 @@ function playWithScriptable(url) {
 
 async function loadScriptText() {
   if (scriptText) return scriptText;
-  const response = await fetch('scriptable/Moviesrc.script?v=3', { cache: 'no-store' });
+  const response = await fetch('scriptable/Moviesrc.script?v=4', { cache: 'no-store' });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   scriptText = await response.text();
   return scriptText;
@@ -444,7 +444,7 @@ function addScript() {
 }
 
 if (isIOS()) {
-  fetch('scriptable/Moviesrc.script?v=3')
+  fetch('scriptable/Moviesrc.script?v=4')
     .then(response => response.ok ? response.text() : '')
     .then(text => { scriptText = text; })
     .catch(() => {});

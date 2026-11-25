@@ -36,8 +36,10 @@ async function resolve(input) {
     throw new Error('Token non trovato nella pagina embed (' + html.length + ' caratteri).');
   }
 
-  // cf=0: segmenti video/mp2t. cf=1 li serve come text/html e Infuse/VLC non li aprono.
-  return master[1] + '?token=' + token[1] + '&expires=' + expires[1] + '&asn=&cf=0';
+  // cf=1: flusso che VLC/Safari riproducono (segmenti text/html).
+  // cf=0: segmenti video/mp2t, tentativo per Infuse.
+  const base = master[1] + '?token=' + token[1] + '&expires=' + expires[1] + '&asn=';
+  return { hls: base + '&cf=1', mp2t: base + '&cf=0' };
 }
 
 function openAppOrStore(url, store) {
@@ -55,7 +57,8 @@ async function main() {
   }
   if (!input) input = Pasteboard.paste();
 
-  const finalUrl = await resolve(input);
+  const urls = await resolve(input);
+  const finalUrl = urls.hls;
 
   const alert = new Alert();
   alert.title = 'Moviesrc';
@@ -70,7 +73,7 @@ async function main() {
   const choice = await alert.present();
 
   const vlcUrl = 'vlc-x-callback://x-callback-url/stream?url=' + encodeURIComponent(finalUrl);
-  const infuseUrl = 'infuse://x-callback-url/play?url=' + encodeURIComponent(finalUrl);
+  const infuseUrl = 'infuse://x-callback-url/play?url=' + encodeURIComponent(urls.mp2t);
 
   if (choice === 0) {
     Safari.open(finalUrl);
