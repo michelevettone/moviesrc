@@ -306,3 +306,10 @@ body.modal-open { overflow: hidden; }
 .install-banner p { margin: 3px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
 .install-banner .icon-button { flex: 0 0 32px; width: 32px; height: 32px; font-size: 16px; }
 body.detail-open .install-banner { display: none; }
+
+.watch-card { display: grid; gap: 8px; }
+.watch-subtitle { margin: -2px 0 6px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+.watch-option { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+.watch-option:hover { border-color: var(--accent); }
+.watch-option.is-cancel { background: transparent; color: var(--muted); font-weight: 500; }
+.watch-option[hidden] { display: none; }

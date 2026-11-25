@@ -37,7 +37,6 @@ const I18N = {
     scriptModalTitle: 'Aggiungi script',
     scriptModalBody: 'Script copiato. Nella pagina che si apre, incolla e rinomina Moviesrc. Se Scriptable non è installato, OK apre l’App Store.',
     scriptModalError: 'Copia non riuscita. Riprova.',
-    shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
     results: 'risultati in film e serie',
@@ -49,9 +48,12 @@ const I18N = {
     loadError: 'Impossibile caricare il catalogo: ',
     searchError: 'Errore di ricerca: ',
     enSoon: 'Catalogo inglese in preparazione. Riprova tra poco.',
-    watch: '▶ Guarda ↗',
-    filmez: '▶ Filmez ↗',
-    filmezLoading: 'Filmez',
+    watch: '▶ Guarda',
+    watchTitle: 'Guarda',
+    watchOpen: 'Apri',
+    watchScriptable: 'Senza ads (Scriptable)',
+    watchFilmez: 'Filmez',
+    watchCancel: 'Annulla',
     details: '▶ Dettagli',
     trailer: '▶ Trailer',
     episodes: '▶ Episodi',
@@ -96,7 +98,6 @@ const I18N = {
     scriptModalTitle: 'Add script',
     scriptModalBody: 'Script copied. In the page that opens, paste and rename it Moviesrc. If Scriptable is not installed, OK opens the App Store.',
     scriptModalError: 'Copy failed. Try again.',
-    shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
     results: 'results in movies and TV shows',
@@ -108,7 +109,12 @@ const I18N = {
     loadError: 'Could not load the catalog: ',
     searchError: 'Search error: ',
     enSoon: 'English catalog is being prepared. Try again shortly.',
-    watch: '▶ Watch ↗',
+    watch: '▶ Watch',
+    watchTitle: 'Watch',
+    watchOpen: 'Open',
+    watchScriptable: 'No ads (Scriptable)',
+    watchFilmez: 'Filmez',
+    watchCancel: 'Cancel',
     vidlink: '▶ VidLink ↗',
     vidlinkLoading: 'VidLink',
     details: '▶ Details',
@@ -176,13 +182,17 @@ const els = {
   detailMeta: document.getElementById('detail-meta'),
   detailPoster: document.getElementById('detail-poster'),
   detailWatch: document.getElementById('detail-watch'),
-  detailFilmez: document.getElementById('detail-filmez'),
   detailVidlink: document.getElementById('detail-vidlink'),
+  watchMenu: document.getElementById('watch-menu'),
+  watchSubtitle: document.getElementById('watch-subtitle'),
+  watchOpen: document.getElementById('watch-open'),
+  watchScriptable: document.getElementById('watch-scriptable'),
+  watchFilmez: document.getElementById('watch-filmez'),
+  watchCancel: document.getElementById('watch-cancel'),
   detailTrailerWrap: document.getElementById('detail-trailer-wrap'),
 
   detailLast: document.getElementById('detail-last'),
   detailResume: document.getElementById('detail-resume'),
-  detailShortcut: document.getElementById('detail-shortcut'),
   detailOverview: document.getElementById('detail-overview'),
   seasons: document.getElementById('seasons'),
 };
@@ -404,6 +414,49 @@ function launchScriptable(url) {
 function playWithScriptable(url) {
   if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
   launchScriptable(`scriptable:///run?scriptName=Moviesrc&url=${encodeURIComponent(url)}`);
+}
+
+let watchContext = null;
+let watchMenuOpen = false;
+
+function openProvider(url) {
+  if (!url) return;
+  if (isIOS() && isStandalone()) {
+    const browser = getBrowser();
+    if (browser !== 'system' && !(browser === 'chrome' && /CriOS/.test(navigator.userAgent))) {
+      launchBrowser(url, browser);
+      return;
+    }
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
+function openWatchMenu(context) {
+  watchContext = context;
+  watchMenuOpen = true;
+  els.watchSubtitle.textContent = context.subtitle || '';
+  els.watchScriptable.hidden = !(isIOS() && state.lang === 'it');
+  els.watchFilmez.hidden = !context.filmezUrl;
+  els.watchMenu.hidden = false;
+  document.body.classList.add('modal-open');
+  els.watchOpen.focus();
+}
+
+function closeWatchMenu() {
+  els.watchMenu.hidden = true;
+  document.body.classList.remove('modal-open');
+  watchMenuOpen = false;
+  watchContext = null;
+}
+
+function chooseWatch(kind) {
+  const context = watchContext;
+  if (!context) return;
+  closeWatchMenu();
+  if (context.onChoose) context.onChoose();
+  if (kind === 'open') openProvider(context.providerUrl);
+  else if (kind === 'scriptable') playWithScriptable(context.providerUrl);
+  else if (kind === 'filmez') openProvider(context.filmezUrl);
 }
 
 async function loadScriptText() {
@@ -759,6 +812,7 @@ function getEpisodes() {
 }
 
 async function showDetail(id) {
+  closeWatchMenu();
   state.detailId = `tv:${id}`;
   document.body.classList.add('detail-open');
   els.catalog.hidden = true;
@@ -775,18 +829,12 @@ async function showDetail(id) {
   resetTrailer();
   els.detailLast.hidden = true;
   els.detailLast.removeAttribute('href');
+  els.detailLast.onclick = null;
   els.detailLast.textContent = '';
   els.detailResume.hidden = true;
   els.detailResume.removeAttribute('href');
+  els.detailResume.onclick = null;
   els.detailResume.textContent = '';
-  els.detailShortcut.hidden = true;
-  els.detailShortcut.onclick = null;
-  els.detailFilmez.hidden = true;
-  els.detailFilmez.removeAttribute('href');
-  els.detailFilmez.removeAttribute('aria-busy');
-  els.detailFilmez.removeAttribute('aria-disabled');
-  els.detailFilmez.classList.remove('is-loading');
-  els.detailFilmez.textContent = '';
   els.detailVidlink.hidden = true;
   els.detailVidlink.removeAttribute('href');
   els.detailVidlink.removeAttribute('aria-busy');
@@ -854,19 +902,39 @@ async function showDetail(id) {
       if (current) {
         els.detailLast.href = externalLink(episodeUrl(id, current.s, current.e));
         els.detailLast.textContent = t('resumeLast').replace('{ep}', badge(current));
+        els.detailLast.onclick = event => { event.preventDefault(); openEpisodeWatch(current); };
       }
 
       els.detailResume.hidden = !next;
       if (next) {
         els.detailResume.href = externalLink(episodeUrl(id, next.s, next.e));
         els.detailResume.textContent = t('resumeNext').replace('{ep}', badge(next));
+        els.detailResume.onclick = event => { event.preventDefault(); openEpisodeWatch(next); };
       }
+    }
 
-      const shareTarget = state.lang === 'it' ? (next || current || episodes[0]) : null;
-      els.detailShortcut.hidden = !isIOS() || !shareTarget;
-      if (shareTarget) {
-        els.detailShortcut.onclick = () => playWithScriptable(episodeUrl(id, shareTarget.s, shareTarget.e));
-      }
+    function openEpisodeWatch(episode) {
+      openWatchMenu({
+        kind: 'episode',
+        subtitle: `${title} · ${badge(episode)}`,
+        providerUrl: externalLink(episodeUrl(id, episode.s, episode.e)),
+        filmezUrl: null,
+        onChoose: () => {
+          remember({
+            mediaType: 'tv',
+            tmdb_id: Number(id),
+            imdb_id: null,
+            title,
+            year: info && info.year ? info.year : '',
+            poster: info && info.poster ? info.poster : null,
+            s: episode.s,
+            e: episode.e,
+          });
+          lastEpisode = episode;
+          markCurrent(episode);
+          setResume(episode);
+        },
+      });
     }
 
     function markCurrent(episode) {
@@ -919,20 +987,9 @@ async function showDetail(id) {
           link.setAttribute('aria-current', 'true');
           link.title = `${t('season')} ${episode.s} — E${episode.e} · ${t('lastWatched')}`;
         }
-        link.addEventListener('click', () => {
-          remember({
-            mediaType: 'tv',
-            tmdb_id: Number(id),
-            imdb_id: null,
-            title,
-            year: info && info.year ? info.year : '',
-            poster: info && info.poster ? info.poster : null,
-            s: episode.s,
-            e: episode.e,
-          });
-          lastEpisode = episode;
-          markCurrent(episode);
-          setResume(episode);
+        link.addEventListener('click', event => {
+          event.preventDefault();
+          openEpisodeWatch(episode);
         });
         grid.append(link);
       }
@@ -946,7 +1003,9 @@ async function showDetail(id) {
 }
 
 async function showMovieDetail(id) {
+  closeWatchMenu();
   const movieKey = `movie:${id}`;
+  let movieFilmezLink = null;
   state.detailId = movieKey;
   document.body.classList.add('detail-open');
   els.catalog.hidden = true;
@@ -958,12 +1017,6 @@ async function showMovieDetail(id) {
   els.detailWatch.hidden = true;
   els.detailWatch.removeAttribute('href');
   els.detailWatch.onclick = null;
-  els.detailFilmez.hidden = true;
-  els.detailFilmez.removeAttribute('href');
-  els.detailFilmez.removeAttribute('aria-busy');
-  els.detailFilmez.removeAttribute('aria-disabled');
-  els.detailFilmez.classList.remove('is-loading');
-  els.detailFilmez.textContent = '';
   els.detailVidlink.hidden = true;
   els.detailVidlink.removeAttribute('href');
   els.detailVidlink.removeAttribute('aria-busy');
@@ -972,8 +1025,6 @@ async function showMovieDetail(id) {
   els.detailVidlink.textContent = '';
   els.detailLast.hidden = true;
   els.detailResume.hidden = true;
-  els.detailShortcut.hidden = true;
-  els.detailShortcut.onclick = null;
   els.detailOverview.hidden = true;
   els.detailOverview.textContent = '';
   resetTrailer();
@@ -1000,39 +1051,31 @@ async function showMovieDetail(id) {
     }
 
     if (item) {
+      const watchUrl = providerUrl(item);
       els.detailWatch.hidden = false;
-      els.detailWatch.href = externalLink(providerUrl(item));
+      els.detailWatch.href = externalLink(watchUrl);
       els.detailWatch.textContent = t('watch');
-      els.detailWatch.onclick = () => remember(item);
-      if (isIOS() && state.lang === 'it') {
-        els.detailShortcut.hidden = false;
-        els.detailShortcut.onclick = () => playWithScriptable(providerUrl(item));
-      }
+      els.detailWatch.onclick = event => {
+        event.preventDefault();
+        openWatchMenu({
+          kind: 'movie',
+          id: movieKey,
+          subtitle: [title, item.year].filter(Boolean).join(' · '),
+          providerUrl: watchUrl,
+          filmezUrl: movieFilmezLink,
+          onChoose: () => remember(item),
+        });
+      };
     }
 
     if (item && state.lang === 'it' && item.title) {
-      els.detailFilmez.hidden = false;
-      els.detailFilmez.removeAttribute('href');
-      els.detailFilmez.setAttribute('aria-busy', 'true');
-      els.detailFilmez.setAttribute('aria-disabled', 'true');
-      els.detailFilmez.classList.add('is-loading');
-      const spinner = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-hidden', 'true');
-      els.detailFilmez.textContent = t('filmezLoading');
-      els.detailFilmez.append(spinner);
       filmzDirectLink(item).then(link => {
         if (state.detailId !== movieKey) return;
-        els.detailFilmez.classList.remove('is-loading');
-        els.detailFilmez.removeAttribute('aria-busy');
-        els.detailFilmez.removeAttribute('aria-disabled');
-        if (!link) {
-          els.detailFilmez.hidden = true;
-          els.detailFilmez.textContent = '';
-          return;
+        movieFilmezLink = link;
+        if (watchMenuOpen && watchContext && watchContext.kind === 'movie' && watchContext.id === movieKey) {
+          watchContext.filmezUrl = link;
+          els.watchFilmez.hidden = !link;
         }
-        els.detailFilmez.href = link;
-        els.detailFilmez.textContent = t('filmez');
       });
     }
 
@@ -1095,6 +1138,7 @@ async function showMovieDetail(id) {
 }
 
 function showCatalog(restore = true) {
+  closeWatchMenu();
   state.detailId = null;
   state.routeHash = location.hash;
   resetTrailer();
@@ -1148,6 +1192,7 @@ document.addEventListener('click', event => {
 
 document.addEventListener('click', event => {
   if (!isIOS() || !isStandalone()) return;
+  if (event.defaultPrevented) return;
   const link = event.target.closest('a[href]');
   if (!link) return;
   const href = link.getAttribute('href');
@@ -1205,8 +1250,19 @@ els.scriptModal.addEventListener('click', event => {
   if (event.target === els.scriptModal) closeScriptModal(false);
 });
 
+els.watchOpen.addEventListener('click', () => chooseWatch('open'));
+els.watchScriptable.addEventListener('click', () => chooseWatch('scriptable'));
+els.watchFilmez.addEventListener('click', () => chooseWatch('filmez'));
+els.watchCancel.addEventListener('click', closeWatchMenu);
+
+els.watchMenu.addEventListener('click', event => {
+  if (event.target === els.watchMenu) closeWatchMenu();
+});
+
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && !els.scriptModal.hidden) closeScriptModal(false);
+  if (event.key !== 'Escape') return;
+  if (!els.scriptModal.hidden) closeScriptModal(false);
+  if (!els.watchMenu.hidden) closeWatchMenu();
 });
 
 els.settingsButton.addEventListener('click', event => {

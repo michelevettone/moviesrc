@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=49">
+  <link rel="stylesheet" href="styles.css?v=50">
 </head>
 <body>
   <header class="site-header">
@@ -105,8 +105,6 @@
           <p id="detail-meta" class="muted"></p>
           <div class="resume-actions">
             <a id="detail-watch" class="resume" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
-            <button id="detail-shortcut" class="resume is-secondary" type="button" hidden data-i18n="shortcutPlay">▶ Senza ads</button>
-            <a id="detail-filmez" class="resume is-secondary" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
             <a id="detail-vidlink" class="resume is-secondary" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
             <a id="detail-last" class="resume is-secondary" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
             <a id="detail-resume" class="resume" hidden target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"></a>
@@ -133,6 +131,17 @@
     <button id="install-close" class="icon-button" type="button" data-i18n-aria="installClose" aria-label="Chiudi">×</button>
   </div>
 
+  <div id="watch-menu" class="modal" role="dialog" aria-modal="true" aria-labelledby="watch-title" aria-describedby="watch-subtitle" hidden>
+    <div class="modal-card watch-card">
+      <h2 id="watch-title" data-i18n="watchTitle">Guarda</h2>
+      <p id="watch-subtitle" class="watch-subtitle"></p>
+      <button id="watch-open" class="watch-option" type="button" data-i18n="watchOpen">Apri</button>
+      <button id="watch-scriptable" class="watch-option" type="button" data-i18n="watchScriptable">Senza ads (Scriptable)</button>
+      <button id="watch-filmez" class="watch-option" type="button" data-i18n="watchFilmez">Filmez</button>
+      <button id="watch-cancel" class="watch-option is-cancel" type="button" data-i18n="watchCancel">Annulla</button>
+    </div>
+  </div>
+
   <div id="script-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="script-modal-title" aria-describedby="script-modal-body" hidden>
     <div class="modal-card">
       <h2 id="script-modal-title" data-i18n="scriptModalTitle">Aggiungi script</h2>
@@ -141,6 +150,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=87"></script>
+  <script src="app.js?v=88"></script>
 </body>
 </html>
