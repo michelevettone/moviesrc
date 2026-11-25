@@ -3,7 +3,7 @@
 A static movie and TV catalog for GitHub Pages with three sources:
 
 - **Italian** → vixsrc catalog and player (`?lang=it`)
-- **English** → full vidsrc catalog, played with VidFast (VidLink as an alternative)
+- **English** → full vidsrc catalog and player, with VidLink as an alternative player on movie details
 - **Filmez** → Italian movies-only alternative link on movie detail pages
 
 The initial language comes from the system (`it*` → Italian, anything else → English) and can be changed from the dropdown in the top-right corner. The choice is persisted in `localStorage`.
@@ -18,7 +18,7 @@ Each TV show has an internal page with every available episode (`#tv/{tmdbId}`);
 - Lists sorted by release date, newest first.
 - "Continue watching" carousel based on the last opened movies/episodes (stored in `localStorage`; no playback position yet). TV entries open the show page, highlight the last opened episode and offer a quick "resume from next episode" button.
 - Filmez alternative link on Italian movie detail pages, resolved on demand through Filmez's public WordPress REST API; shown only when a matching film page exists.
-- English movies and episodes play on VidFast, with VidLink as an alternative movie player.
+- English movies play on vidsrc by default, with VidLink as an alternative; the VidLink button only appears when the Worker confirms the title exists.
 - iOS browser picker (Chrome, Safari, Brave, Firefox, Edge, Web Video Cast or system browser) for external provider links, persisted in `localStorage`. It is shown only when the site runs as an installed iOS PWA.
 - Responsive card grid, poster overlays, lazy-free eager thumbnails at the correct size.
 - Installable PWA with service worker, manifest, icons and safe-area support.
@@ -53,8 +53,11 @@ The GitHub Actions workflow uses the repository secret `TMDB_TOKEN`; the token i
 ## Providers and limitations
 
 - **vixsrc (IT)**: supports `?lang=it` for Italian audio/subtitles.
-- **vidsrc catalog (EN)**: catalog data comes from vidsrc, but movies and episodes are played with **VidFast** (`vidfast.vc/movie/{tmdb}`, `/tv/{tmdb}/{s}/{e}`); movie details also offer **VidLink** (`vidlink.pro/movie/{tmdb}`) as a second player. Both use TMDB IDs.
-- VidFast and VidLink serve ads and do **not** expose Italian audio; English mode uses the original/English audio with player subtitles.
+- **vidsrc (EN)**: catalog source and default player; embeds (`/embed/movie/{id}`, `/embed/tv/{id}/{s}/{e}`) accept IMDb or TMDB IDs.
+- vidsrc does **not** expose audio-track selection; English mode uses the original/English audio. Subtitle language can be selected in the player.
+- vidsrc serves ads and is embedded directly from `vidsrc.sh` (not the `vidsrc.mov` wrapper).
+- **VidLink (EN)**: optional second player on movie details (`vidlink.pro/movie/{tmdb}`). `cloudflare/worker.js` exposes `/providers/movie/{id}` to check availability; the button is hidden when the check fails or returns no title.
+- VidLink also serves ads and uses the original/English audio.
 - AirPlay from the vixsrc player may send audio only; use screen mirroring for video.
 - **Filmez (IT)**: movies-only Italian catalog, queried live from the browser (its REST API allows CORS), so it is not part of the daily data files. Movie details link to the Filmez film page, matched by title and year. Filmez's own video links go through the `uprot.net` captcha shortener and are not extracted.
 - "Continue watching" tracks what was opened, not the exact playback position.
@@ -79,7 +82,7 @@ npx wrangler deploy --config cloudflare/wrangler.toml
 
 The custom domain is declared in `cloudflare/wrangler.toml` and is created automatically by Wrangler.
 
-The Worker also exposes `/tmdb/movie/{id}?lang=it|en` for on-demand localized plots. It needs a TMDB token as a Worker secret:
+The Worker also exposes `/tmdb/movie/{id}?lang=it|en` for on-demand localized plots and `/providers/movie/{id}` for the VidLink availability check. It needs a TMDB token as a Worker secret:
 
 ```sh
 printf '%s' "$TMDB_TOKEN" | npx wrangler secret put TMDB_TOKEN --config cloudflare/wrangler.toml

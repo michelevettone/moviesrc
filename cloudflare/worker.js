@@ -23,11 +23,25 @@ const CORS = {
   'access-control-allow-headers': 'content-type',
 };
 
-function json(body, status = 200) {
+function json(body, status = 200, ttl = 86400) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=86400', ...CORS },
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${ttl}`, ...CORS },
   });
+}
+
+const CHECK_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36';
+
+async function vidlinkAvailable(id) {
+  try {
+    const response = await fetch(`https://vidlink.pro/movie/${id}`, {
+      method: 'HEAD',
+      headers: { 'User-Agent': CHECK_UA },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 export default {
@@ -59,6 +73,14 @@ export default {
         genres: (data.genres || []).map(genre => genre.name),
         trailer: trailer ? { key: trailer.key, name: trailer.name, official: trailer.official === true } : null,
       });
+    }
+
+    if (incoming.pathname.startsWith('/providers/movie/')) {
+      if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+      const id = incoming.pathname.split('/').pop();
+      if (!/^\d+$/.test(id)) return json({ error: 'invalid id' }, 400);
+      const vidlink = await vidlinkAvailable(id);
+      return json({ vidlink }, 200, 3600);
     }
 
     if (incoming.pathname === '/go' || incoming.pathname === '/go/') {
