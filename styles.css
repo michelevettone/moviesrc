@@ -318,3 +318,4 @@ body.detail-open .install-banner { display: none; }
 .install-action { flex: 0 0 auto; padding: 8px 10px; border: 1px solid var(--accent); border-radius: 9px; background: transparent; color: var(--accent); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .install-action:hover { background: var(--accent); color: #fff; }
 .install-help-body { white-space: pre-line; }
+.share-icon { width: 1em; height: 1em; vertical-align: -0.12em; }

@@ -28,13 +28,13 @@ const I18N = {
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
     installTitle: 'Installa moviesrc',
-    installBody: 'Tocca Condividi e scegli Aggiungi alla schermata Home.',
+    installBody: 'Tocca {icon} Condividi e scegli Aggiungi alla schermata Home.',
     installAndroid: 'Apri il menu del browser e scegli Installa app (o Aggiungi alla schermata Home).',
     installDesktop: 'Installa moviesrc come app.',
     installNow: 'Installa',
     installHow: 'Come si fa',
     installHelpTitle: 'Aggiungi alla schermata Home',
-    installHelpIOS: '1. Tocca Condividi (il quadrato con la freccia).\n2. Scegli Aggiungi alla schermata Home.\n3. Tocca Aggiungi.',
+    installHelpIOS: '1. Tocca {icon} Condividi.\n2. Scegli Aggiungi alla schermata Home.\n3. Tocca Aggiungi.',
     installHelpAndroid: '1. Apri il menu ⋮ del browser.\n2. Scegli Installa app o Aggiungi alla schermata Home.',
     installHelpDesktop: 'Clicca l’icona Installa nella barra degli indirizzi del browser.',
     installClose: 'Chiudi',
@@ -95,13 +95,13 @@ const I18N = {
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
     installTitle: 'Install moviesrc',
-    installBody: 'Tap Share and choose Add to Home Screen.',
+    installBody: 'Tap {icon} Share and choose Add to Home Screen.',
     installAndroid: 'Open the browser menu and choose Install app (or Add to Home Screen).',
     installDesktop: 'Install moviesrc as an app.',
     installNow: 'Install',
     installHow: 'How to',
     installHelpTitle: 'Add to Home Screen',
-    installHelpIOS: '1. Tap Share (the square with the arrow).\n2. Choose Add to Home Screen.\n3. Tap Add.',
+    installHelpIOS: '1. Tap {icon} Share.\n2. Choose Add to Home Screen.\n3. Tap Add.',
     installHelpAndroid: '1. Open the browser ⋮ menu.\n2. Choose Install app or Add to Home Screen.',
     installHelpDesktop: 'Click the Install icon in the browser’s address bar.',
     installClose: 'Close',
@@ -256,6 +256,7 @@ function applyI18n() {
 }
 
 let deferredPrompt = null;
+const SHARE_ICON = '<svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8 7l4-4 4 4"/><path d="M6 10H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1"/></svg>';
 
 function updateInstallBannerText() {
   if (!els.installBanner || els.installBanner.hidden) return;
@@ -263,7 +264,9 @@ function updateInstallBannerText() {
   let key = 'installBody';
   if (/Android/i.test(ua)) key = deferredPrompt ? 'installDesktop' : 'installAndroid';
   else if (!isIOS() && deferredPrompt) key = 'installDesktop';
-  els.installBody.textContent = t(key);
+  const text = t(key);
+  if (key === 'installBody') els.installBody.innerHTML = text.replace('{icon}', SHARE_ICON);
+  else els.installBody.textContent = text;
   els.installAction.textContent = deferredPrompt ? t('installNow') : t('installHow');
 }
 
@@ -303,7 +306,9 @@ function openInstallHelp() {
   let key = 'installHelpDesktop';
   if (isIOS()) key = 'installHelpIOS';
   else if (/Android/i.test(ua)) key = 'installHelpAndroid';
-  els.installHelpBody.textContent = t(key);
+  const text = t(key);
+  if (key === 'installHelpIOS') els.installHelpBody.innerHTML = text.replace('{icon}', SHARE_ICON);
+  else els.installHelpBody.textContent = text;
   els.installHelp.hidden = false;
   document.body.classList.add('modal-open');
   els.installHelpOk.focus();
