@@ -285,3 +285,11 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .detail-poster { width: 130px; }
 }
+
+.modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #000a; }
+.modal[hidden] { display: none; }
+.modal-card { width: min(360px, 100%); padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 20px 50px #000b; }
+.modal-card h2 { margin: 0 0 8px; font-size: 18px; letter-spacing: -.01em; }
+.modal-card p { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.modal-card .resume { width: 100%; justify-content: center; }
+body.modal-open { overflow: hidden; }

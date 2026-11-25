@@ -10,7 +10,6 @@ const LANG_KEY = 'moviesrc-lang';
 const RECENT_KEY = 'moviesrc-recent';
 const BROWSER_KEY = 'moviesrc-browser';
 const SCRIPTABLE_STORE = 'https://apps.apple.com/app/scriptable/id1405459188';
-const SCRIPTABLE_KEY = 'moviesrc-scriptable';
 const BROWSERS = new Set(['chrome', 'safari', 'brave', 'brave-beta', 'firefox', 'edge', 'wvc', 'system']);
 
 const I18N = {
@@ -27,13 +26,12 @@ const I18N = {
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
     scriptLabel: 'Scriptable',
-    scriptStore: 'Installa Scriptable',
-    scriptOpen: 'Apri Scriptable',
     scriptWhy: 'Niente ads: risolve il flusso diretto e lo apre in Safari (AirPlay) o VLC.',
     scriptAdd: 'Aggiungi script',
     scriptHint: 'Copia lo script e apri Scriptable: incolla e rinomina Moviesrc.',
-    scriptModalTitle: 'Script copiato',
-    scriptModalBody: 'Nella pagina che si apre, incolla lo script e rinominalo Moviesrc.',
+    scriptModalTitle: 'Aggiungi script',
+    scriptModalBody: 'Script copiato. Nella pagina che si apre, incolla e rinomina Moviesrc. Se Scriptable non è installato, OK apre l’App Store.',
+    scriptModalError: 'Copia non riuscita. Riprova.',
     shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
@@ -83,13 +81,12 @@ const I18N = {
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
     scriptLabel: 'Scriptable',
-    scriptStore: 'Install Scriptable',
-    scriptOpen: 'Open Scriptable',
     scriptWhy: 'No ads: resolves the direct stream and opens it in Safari (AirPlay) or VLC.',
     scriptAdd: 'Add script',
     scriptHint: 'Copies the script and opens Scriptable: paste and rename to Moviesrc.',
-    scriptModalTitle: 'Script copied',
-    scriptModalBody: 'In the page that opens, paste the script and rename it Moviesrc.',
+    scriptModalTitle: 'Add script',
+    scriptModalBody: 'Script copied. In the page that opens, paste and rename it Moviesrc. If Scriptable is not installed, OK opens the App Store.',
+    scriptModalError: 'Copy failed. Try again.',
     shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
@@ -146,11 +143,11 @@ const els = {
   settingsButton: document.getElementById('settings-button'),
   settingsMenu: document.getElementById('settings-menu'),
   browserSetting: document.getElementById('browser-setting'),
-  scriptableOpen: document.getElementById('scriptable-open'),
   scriptAdd: document.getElementById('script-add'),
   scriptHint: document.getElementById('script-hint'),
   scriptModal: document.getElementById('script-modal'),
   scriptModalOk: document.getElementById('script-modal-ok'),
+  scriptModalBody: document.getElementById('script-modal-body'),
   browserSelect: document.getElementById('browser-select'),
   appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
@@ -217,7 +214,6 @@ function applyI18n() {
     option.setAttribute('aria-selected', String(active));
   }
   renderRecent();
-  updateScriptableUI();
 }
 
 function closeLangMenu() {
@@ -364,34 +360,13 @@ function episodeUrl(showId, season, episode) {
 
 let scriptText = '';
 
-function markScriptable() {
-  try { localStorage.setItem(SCRIPTABLE_KEY, '1'); } catch {}
-  updateScriptableUI();
-}
-
-function updateScriptableUI() {
-  if (!els.scriptableOpen) return;
-  let known = false;
-  try { known = localStorage.getItem(SCRIPTABLE_KEY) === '1'; } catch {}
-  els.scriptableOpen.textContent = t(known ? 'scriptOpen' : 'scriptStore');
-}
-
 function launchScriptable(url) {
   let left = false;
-  const onVisibility = () => {
-    if (document.hidden) {
-      left = true;
-      markScriptable();
-    }
-  };
+  const onVisibility = () => { if (document.hidden) left = true; };
   document.addEventListener('visibilitychange', onVisibility);
   setTimeout(() => {
     document.removeEventListener('visibilitychange', onVisibility);
-    if (!left && !document.hidden) {
-      try { localStorage.removeItem(SCRIPTABLE_KEY); } catch {}
-      updateScriptableUI();
-      location.href = SCRIPTABLE_STORE;
-    }
+    if (!left && !document.hidden) location.href = SCRIPTABLE_STORE;
   }, 1500);
   location.href = url;
 }
@@ -400,10 +375,6 @@ function launchScriptable(url) {
 function playWithScriptable(url) {
   if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
   launchScriptable(`scriptable:///run?scriptName=Moviesrc&url=${encodeURIComponent(url)}`);
-}
-
-function openScriptable() {
-  launchScriptable('scriptable:///run?scriptName=Moviesrc');
 }
 
 async function loadScriptText() {
@@ -427,24 +398,21 @@ function closeScriptModal(openApp) {
 }
 
 function addScript() {
-  if (!scriptText) {
-    loadScriptText().then(text => {
-      scriptText = text;
-      addScript();
-    }).catch(error => {
-      els.scriptHint.textContent = `${t('error')}: ${error.message}`;
-    });
-    return;
-  }
-  if (!navigator.clipboard) {
-    els.scriptHint.textContent = t('error');
-    return;
-  }
-  navigator.clipboard.writeText(scriptText)
-    .then(openScriptModal)
-    .catch(error => {
-      els.scriptHint.textContent = `${t('error')}: ${error.message}`;
-    });
+  els.scriptModalBody.textContent = t('scriptModalBody');
+  openScriptModal();
+  const fail = error => {
+    els.scriptHint.textContent = `${t('error')}: ${error.message}`;
+    els.scriptModalBody.textContent = t('scriptModalError');
+  };
+  const copy = text => {
+    if (!navigator.clipboard) { fail(new Error('Clipboard')); return; }
+    navigator.clipboard.writeText(text).catch(fail);
+  };
+  if (scriptText) { copy(scriptText); return; }
+  loadScriptText().then(text => {
+    scriptText = text;
+    copy(text);
+  }).catch(fail);
 }
 
 fetch('scriptable/Moviesrc.script?v=1')
@@ -1189,11 +1157,6 @@ els.langButton.addEventListener('click', event => {
   const open = els.langMenu.hidden;
   els.langMenu.hidden = !open;
   els.langButton.setAttribute('aria-expanded', String(open));
-});
-
-els.scriptableOpen.addEventListener('click', event => {
-  event.preventDefault();
-  openScriptable();
 });
 
 els.scriptAdd.addEventListener('click', event => {
