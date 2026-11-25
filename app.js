@@ -29,10 +29,11 @@ const I18N = {
     scriptLabel: 'Scriptable',
     scriptStore: 'Installa Scriptable',
     scriptOpen: 'Apri Scriptable',
-    scriptShare: 'Invia a Scriptable',
-    scriptCopy: 'Copia script',
-    scriptHint: 'Scegli Scriptable dal menu di condivisione. Se non compare, usa Copia script.',
-    scriptCopied: 'Copiato. Apri Scriptable → + → incolla → rinomina Moviesrc.',
+    scriptWhy: 'Niente ads: risolve il flusso diretto e lo apre in Safari (AirPlay) o VLC.',
+    scriptAdd: 'Aggiungi script',
+    scriptHint: 'Copia lo script e apri Scriptable: incolla e rinomina Moviesrc.',
+    scriptModalTitle: 'Script copiato',
+    scriptModalBody: 'Nella pagina che si apre, incolla lo script e rinominalo Moviesrc.',
     shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
@@ -84,10 +85,11 @@ const I18N = {
     scriptLabel: 'Scriptable',
     scriptStore: 'Install Scriptable',
     scriptOpen: 'Open Scriptable',
-    scriptShare: 'Send to Scriptable',
-    scriptCopy: 'Copy script',
-    scriptHint: 'Choose Scriptable from the share sheet. If it does not appear, use Copy script.',
-    scriptCopied: 'Copied. Open Scriptable → + → paste → rename to Moviesrc.',
+    scriptWhy: 'No ads: resolves the direct stream and opens it in Safari (AirPlay) or VLC.',
+    scriptAdd: 'Add script',
+    scriptHint: 'Copies the script and opens Scriptable: paste and rename to Moviesrc.',
+    scriptModalTitle: 'Script copied',
+    scriptModalBody: 'In the page that opens, paste the script and rename it Moviesrc.',
     shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
@@ -145,9 +147,10 @@ const els = {
   settingsMenu: document.getElementById('settings-menu'),
   browserSetting: document.getElementById('browser-setting'),
   scriptableOpen: document.getElementById('scriptable-open'),
-  scriptShare: document.getElementById('script-share'),
-  scriptCopy: document.getElementById('script-copy'),
+  scriptAdd: document.getElementById('script-add'),
   scriptHint: document.getElementById('script-hint'),
+  scriptModal: document.getElementById('script-modal'),
+  scriptModalOk: document.getElementById('script-modal-ok'),
   browserSelect: document.getElementById('browser-select'),
   appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
@@ -411,32 +414,37 @@ async function loadScriptText() {
   return scriptText;
 }
 
-function copyScript() {
-  const copy = text => {
-    if (!navigator.clipboard) {
-      els.scriptHint.textContent = t('error');
-      return;
-    }
-    navigator.clipboard.writeText(text)
-      .then(() => { els.scriptHint.textContent = t('scriptCopied'); })
-      .catch(error => { els.scriptHint.textContent = `${t('error')}: ${error.message}`; });
-  };
-  if (scriptText) { copy(scriptText); return; }
-  loadScriptText().then(copy).catch(error => {
-    els.scriptHint.textContent = `${t('error')}: ${error.message}`;
-  });
+function openScriptModal() {
+  els.scriptModal.hidden = false;
+  document.body.classList.add('modal-open');
+  els.scriptModalOk.focus();
 }
 
-function shareScript() {
-  if (!scriptText) { copyScript(); return; }
-  try {
-    const file = new File([scriptText], 'Moviesrc.script', { type: 'text/plain' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: 'Moviesrc' }).catch(() => {});
-      return;
-    }
-  } catch {}
-  copyScript();
+function closeScriptModal(openApp) {
+  els.scriptModal.hidden = true;
+  document.body.classList.remove('modal-open');
+  if (openApp) launchScriptable('scriptable:///add');
+}
+
+function addScript() {
+  if (!scriptText) {
+    loadScriptText().then(text => {
+      scriptText = text;
+      addScript();
+    }).catch(error => {
+      els.scriptHint.textContent = `${t('error')}: ${error.message}`;
+    });
+    return;
+  }
+  if (!navigator.clipboard) {
+    els.scriptHint.textContent = t('error');
+    return;
+  }
+  navigator.clipboard.writeText(scriptText)
+    .then(openScriptModal)
+    .catch(error => {
+      els.scriptHint.textContent = `${t('error')}: ${error.message}`;
+    });
 }
 
 fetch('scriptable/Moviesrc.script?v=1')
@@ -1188,14 +1196,19 @@ els.scriptableOpen.addEventListener('click', event => {
   openScriptable();
 });
 
-els.scriptShare.addEventListener('click', event => {
+els.scriptAdd.addEventListener('click', event => {
   event.preventDefault();
-  shareScript();
+  addScript();
 });
 
-els.scriptCopy.addEventListener('click', event => {
-  event.preventDefault();
-  copyScript();
+els.scriptModalOk.addEventListener('click', () => closeScriptModal(true));
+
+els.scriptModal.addEventListener('click', event => {
+  if (event.target === els.scriptModal) closeScriptModal(false);
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !els.scriptModal.hidden) closeScriptModal(false);
 });
 
 els.settingsButton.addEventListener('click', event => {

@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=45">
+  <link rel="stylesheet" href="styles.css?v=47">
 </head>
 <body>
   <header class="site-header">
@@ -58,10 +58,10 @@
           </div>
           <div id="script-setting">
             <p class="setting-label" data-i18n="scriptLabel">Scriptable</p>
+            <p class="setting-note" data-i18n="scriptWhy">Niente ads: risolve il flusso diretto e lo apre in Safari (AirPlay) o VLC.</p>
             <a id="scriptable-open" class="setting-link" href="#">Installa Scriptable</a>
-            <a id="script-share" class="setting-link is-secondary" href="#" data-i18n="scriptShare">Invia a Scriptable</a>
-            <a id="script-copy" class="setting-link is-secondary" href="#" data-i18n="scriptCopy">Copia script</a>
-            <p id="script-hint" class="setting-hint" data-i18n="scriptHint">Scegli Scriptable dal menu di condivisione. Se non compare, usa Copia script.</p>
+            <a id="script-add" class="setting-link is-secondary" href="#" data-i18n="scriptAdd">Aggiungi script</a>
+            <p id="script-hint" class="setting-hint" data-i18n="scriptHint">Copia lo script e apri Scriptable: incolla e rinomina Moviesrc.</p>
           </div>
           <p id="app-version" class="setting-version"></p>
         </div>
@@ -127,6 +127,14 @@
     <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </footer>
 
-  <script src="app.js?v=78"></script>
+  <div id="script-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="script-modal-title" aria-describedby="script-modal-body" hidden>
+    <div class="modal-card">
+      <h2 id="script-modal-title" data-i18n="scriptModalTitle">Script copiato</h2>
+      <p id="script-modal-body" data-i18n="scriptModalBody">Nella pagina che si apre, incolla lo script e rinominalo Moviesrc.</p>
+      <button id="script-modal-ok" class="resume" type="button">OK</button>
+    </div>
+  </div>
+
+  <script src="app.js?v=80"></script>
 </body>
 </html>
