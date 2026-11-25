@@ -25,8 +25,9 @@ const I18N = {
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
     shortcutLabel: 'Shortcut iOS',
-    shortcutInstall: 'Scarica la shortcut',
-    shortcutHint: 'Su iOS: condividi il link del film e scegli Moviesrc. Niente ads, con AirPlay.',
+    shortcutInstall: 'Aggiungi la shortcut',
+    shortcutDownload: 'Scarica il file',
+    shortcutHint: 'Poi condividi il link del film e scegli Moviesrc. Se il tap non apre Shortcuts, scarica il file e aprilo da File.',
     shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
     searching: 'Ricerca…',
@@ -76,8 +77,9 @@ const I18N = {
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
     shortcutLabel: 'iOS Shortcut',
-    shortcutInstall: 'Download the shortcut',
-    shortcutHint: 'On iOS: share the movie link and choose Moviesrc. No ads, with AirPlay.',
+    shortcutInstall: 'Add the shortcut',
+    shortcutDownload: 'Download the file',
+    shortcutHint: 'Then share the movie link and choose Moviesrc. If the tap does not open Shortcuts, download the file and open it from Files.',
     shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
     searching: 'Searching…',
@@ -135,6 +137,7 @@ const els = {
   settingsMenu: document.getElementById('settings-menu'),
   browserSetting: document.getElementById('browser-setting'),
   browserSelect: document.getElementById('browser-select'),
+  shortcutInstall: document.getElementById('shortcut-install'),
   appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
   searchClear: document.getElementById('search-clear'),
@@ -1189,6 +1192,8 @@ if (new URLSearchParams(location.search).get('reset') === '1') {
   })();
 }
 
+const shortcutFile = new URL('shortcuts/Moviesrc.shortcut?v=3', location.href).href;
+els.shortcutInstall.href = `shortcuts://import-shortcut?url=${encodeURIComponent(shortcutFile)}&name=Moviesrc`;
 els.browserSelect.value = getBrowser();
 const appScript = document.querySelector('script[src*="app.js"]');
 const appVersion = appScript && appScript.src.match(/[?&]v=(\d+)/);
