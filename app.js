@@ -29,8 +29,9 @@ const I18N = {
     scriptLabel: 'Scriptable',
     scriptStore: 'Installa Scriptable',
     scriptOpen: 'Apri Scriptable',
+    scriptShare: 'Invia a Scriptable',
     scriptCopy: 'Copia script',
-    scriptHint: 'Copia lo script, incollalo in un nuovo script Scriptable e rinominalo Moviesrc.',
+    scriptHint: 'Scegli Scriptable dal menu di condivisione. Se non compare, usa Copia script.',
     scriptCopied: 'Copiato. Apri Scriptable → + → incolla → rinomina Moviesrc.',
     shortcutPlay: '▶ Senza ads',
     loading: 'Caricamento catalogo…',
@@ -83,8 +84,9 @@ const I18N = {
     scriptLabel: 'Scriptable',
     scriptStore: 'Install Scriptable',
     scriptOpen: 'Open Scriptable',
+    scriptShare: 'Send to Scriptable',
     scriptCopy: 'Copy script',
-    scriptHint: 'Copy the script, paste it into a new Scriptable script and rename it Moviesrc.',
+    scriptHint: 'Choose Scriptable from the share sheet. If it does not appear, use Copy script.',
     scriptCopied: 'Copied. Open Scriptable → + → paste → rename to Moviesrc.',
     shortcutPlay: '▶ No ads',
     loading: 'Loading catalog…',
@@ -143,6 +145,7 @@ const els = {
   settingsMenu: document.getElementById('settings-menu'),
   browserSetting: document.getElementById('browser-setting'),
   scriptableOpen: document.getElementById('scriptable-open'),
+  scriptShare: document.getElementById('script-share'),
   scriptCopy: document.getElementById('script-copy'),
   scriptHint: document.getElementById('script-hint'),
   browserSelect: document.getElementById('browser-select'),
@@ -400,20 +403,40 @@ function openScriptable() {
   launchScriptable('scriptable:///run?scriptName=Moviesrc');
 }
 
-async function copyScript() {
-  try {
-    let text = scriptText;
-    if (!text) {
-      const response = await fetch('scriptable/Moviesrc.script?v=1', { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      text = await response.text();
-      scriptText = text;
+async function loadScriptText() {
+  if (scriptText) return scriptText;
+  const response = await fetch('scriptable/Moviesrc.script?v=1', { cache: 'no-store' });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  scriptText = await response.text();
+  return scriptText;
+}
+
+function copyScript() {
+  const copy = text => {
+    if (!navigator.clipboard) {
+      els.scriptHint.textContent = t('error');
+      return;
     }
-    await navigator.clipboard.writeText(text);
-    els.scriptHint.textContent = t('scriptCopied');
-  } catch (error) {
+    navigator.clipboard.writeText(text)
+      .then(() => { els.scriptHint.textContent = t('scriptCopied'); })
+      .catch(error => { els.scriptHint.textContent = `${t('error')}: ${error.message}`; });
+  };
+  if (scriptText) { copy(scriptText); return; }
+  loadScriptText().then(copy).catch(error => {
     els.scriptHint.textContent = `${t('error')}: ${error.message}`;
-  }
+  });
+}
+
+function shareScript() {
+  if (!scriptText) { copyScript(); return; }
+  try {
+    const file = new File([scriptText], 'Moviesrc.script', { type: 'text/plain' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Moviesrc' }).catch(() => {});
+      return;
+    }
+  } catch {}
+  copyScript();
 }
 
 fetch('scriptable/Moviesrc.script?v=1')
@@ -1163,6 +1186,11 @@ els.langButton.addEventListener('click', event => {
 els.scriptableOpen.addEventListener('click', event => {
   event.preventDefault();
   openScriptable();
+});
+
+els.scriptShare.addEventListener('click', event => {
+  event.preventDefault();
+  shareScript();
 });
 
 els.scriptCopy.addEventListener('click', event => {
