@@ -36,7 +36,8 @@ async function resolve(input) {
     throw new Error('Token non trovato nella pagina embed (' + html.length + ' caratteri).');
   }
 
-  return master[1] + '?token=' + token[1] + '&expires=' + expires[1] + '&asn=&cf=1';
+  // cf=0: segmenti video/mp2t. cf=1 li serve come text/html e Infuse/VLC non li aprono.
+  return master[1] + '?token=' + token[1] + '&expires=' + expires[1] + '&asn=&cf=0';
 }
 
 function openAppOrStore(url, store) {
