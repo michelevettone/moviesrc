@@ -28,9 +28,15 @@ const I18N = {
     browserHint: 'Su iOS i link esterni si aprono con l’app scelta. Se non è installata, si usa il browser di sistema.',
     systemBrowser: 'Browser di sistema',
     installTitle: 'Installa moviesrc',
-    installBody: 'Tocca Condividi e poi Aggiungi alla schermata Home.',
+    installBody: 'Tocca Condividi e scegli Aggiungi alla schermata Home.',
     installAndroid: 'Apri il menu del browser e scegli Installa app (o Aggiungi alla schermata Home).',
-    installSafari: 'Apri il sito in Safari e usa Condividi → Aggiungi alla schermata Home.',
+    installDesktop: 'Installa moviesrc come app.',
+    installNow: 'Installa',
+    installHow: 'Come si fa',
+    installHelpTitle: 'Aggiungi alla schermata Home',
+    installHelpIOS: '1. Tocca Condividi (il quadrato con la freccia).\n2. Scegli Aggiungi alla schermata Home.\n3. Tocca Aggiungi.',
+    installHelpAndroid: '1. Apri il menu ⋮ del browser.\n2. Scegli Installa app o Aggiungi alla schermata Home.',
+    installHelpDesktop: 'Clicca l’icona Installa nella barra degli indirizzi del browser.',
     installClose: 'Chiudi',
     scriptLabel: 'Scriptable',
     scriptWhy: 'Niente ads: risolve il flusso diretto e lo apre nel browser (AirPlay) o VLC.',
@@ -89,9 +95,15 @@ const I18N = {
     browserHint: 'On iOS external links open in the selected app. If it is not installed, the system browser is used.',
     systemBrowser: 'System browser',
     installTitle: 'Install moviesrc',
-    installBody: 'Tap Share, then Add to Home Screen.',
+    installBody: 'Tap Share and choose Add to Home Screen.',
     installAndroid: 'Open the browser menu and choose Install app (or Add to Home Screen).',
-    installSafari: 'Open this site in Safari and use Share → Add to Home Screen.',
+    installDesktop: 'Install moviesrc as an app.',
+    installNow: 'Install',
+    installHow: 'How to',
+    installHelpTitle: 'Add to Home Screen',
+    installHelpIOS: '1. Tap Share (the square with the arrow).\n2. Choose Add to Home Screen.\n3. Tap Add.',
+    installHelpAndroid: '1. Open the browser ⋮ menu.\n2. Choose Install app or Add to Home Screen.',
+    installHelpDesktop: 'Click the Install icon in the browser’s address bar.',
     installClose: 'Close',
     scriptLabel: 'Scriptable',
     scriptWhy: 'No ads: resolves the direct stream and opens it in the browser (AirPlay) or VLC.',
@@ -166,6 +178,10 @@ const els = {
   installBanner: document.getElementById('install-banner'),
   installBody: document.getElementById('install-body'),
   installClose: document.getElementById('install-close'),
+  installAction: document.getElementById('install-action'),
+  installHelp: document.getElementById('install-help'),
+  installHelpBody: document.getElementById('install-help-body'),
+  installHelpOk: document.getElementById('install-help-ok'),
   browserSelect: document.getElementById('browser-select'),
   appVersion: document.getElementById('app-version'),
   search: document.getElementById('search'),
@@ -239,21 +255,63 @@ function applyI18n() {
   updateInstallBannerText();
 }
 
+let deferredPrompt = null;
+
 function updateInstallBannerText() {
   if (!els.installBanner || els.installBanner.hidden) return;
   const ua = navigator.userAgent;
   let key = 'installBody';
-  if (/Android/i.test(ua)) key = 'installAndroid';
-  else if (isIOS() && /CriOS|FxiOS|EdgiOS|OPiOS|Brave|mercury/i.test(ua)) key = 'installSafari';
+  if (/Android/i.test(ua)) key = deferredPrompt ? 'installDesktop' : 'installAndroid';
+  else if (!isIOS() && deferredPrompt) key = 'installDesktop';
   els.installBody.textContent = t(key);
+  els.installAction.textContent = deferredPrompt ? t('installNow') : t('installHow');
 }
 
 function showInstallBanner() {
   if (isStandalone()) return;
-  if (!isIOS() && !/Android/i.test(navigator.userAgent)) return;
+  if (!isIOS() && !/Android/i.test(navigator.userAgent) && !deferredPrompt) return;
   try { if (localStorage.getItem(INSTALL_KEY) === '1') return; } catch {}
   els.installBanner.hidden = false;
   updateInstallBannerText();
+}
+
+function hideInstallBanner(dismiss) {
+  els.installBanner.hidden = true;
+  if (dismiss) {
+    try { localStorage.setItem(INSTALL_KEY, '1'); } catch {}
+  }
+}
+
+async function handleInstallAction() {
+  if (deferredPrompt) {
+    try {
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if (result && result.outcome === 'accepted') hideInstallBanner(true);
+      else updateInstallBannerText();
+      return;
+    } catch {
+      deferredPrompt = null;
+    }
+  }
+  openInstallHelp();
+}
+
+function openInstallHelp() {
+  const ua = navigator.userAgent;
+  let key = 'installHelpDesktop';
+  if (isIOS()) key = 'installHelpIOS';
+  else if (/Android/i.test(ua)) key = 'installHelpAndroid';
+  els.installHelpBody.textContent = t(key);
+  els.installHelp.hidden = false;
+  document.body.classList.add('modal-open');
+  els.installHelpOk.focus();
+}
+
+function closeInstallHelp() {
+  els.installHelp.hidden = true;
+  document.body.classList.remove('modal-open');
 }
 
 function closeLangMenu() {
@@ -1256,9 +1314,11 @@ els.langButton.addEventListener('click', event => {
   els.langButton.setAttribute('aria-expanded', String(open));
 });
 
-els.installClose.addEventListener('click', () => {
-  els.installBanner.hidden = true;
-  try { localStorage.setItem(INSTALL_KEY, '1'); } catch {}
+els.installClose.addEventListener('click', () => hideInstallBanner(true));
+els.installAction.addEventListener('click', handleInstallAction);
+els.installHelpOk.addEventListener('click', closeInstallHelp);
+els.installHelp.addEventListener('click', event => {
+  if (event.target === els.installHelp) closeInstallHelp();
 });
 
 els.scriptAdd.addEventListener('click', event => {
@@ -1285,6 +1345,7 @@ document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
   if (!els.scriptModal.hidden) closeScriptModal(false);
   if (!els.watchMenu.hidden) closeWatchMenu();
+  if (!els.installHelp.hidden) closeInstallHelp();
 });
 
 els.settingsButton.addEventListener('click', event => {
@@ -1391,6 +1452,7 @@ if (appVersion) els.appVersion.textContent = `build ${appVersion[1]}`;
 const showSettings = isIOS();
 els.settingsButton.hidden = !showSettings;
 els.browserSetting.hidden = !isStandalone();
+els.settingsMenu.classList.toggle('no-browser', !isStandalone());
 if (!showSettings) closeSettings();
 showInstallBanner();
 updateSearchClear();
@@ -1399,6 +1461,18 @@ window.addEventListener('hashchange', route);
 window.addEventListener('popstate', route);
 if (location.hash.startsWith('#tv/') || location.hash.startsWith('#movie/')) route();
 else load('movie');
+
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault();
+  deferredPrompt = event;
+  showInstallBanner();
+  updateInstallBannerText();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  hideInstallBanner(true);
+});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

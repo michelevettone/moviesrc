@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="moviesrc">
-  <link rel="stylesheet" href="styles.css?v=50">
+  <link rel="stylesheet" href="styles.css?v=51">
 </head>
 <body>
   <header class="site-header">
@@ -126,9 +126,18 @@
   <div id="install-banner" class="install-banner" role="region" aria-label="Installa moviesrc" hidden>
     <div>
       <strong data-i18n="installTitle">Installa moviesrc</strong>
-      <p id="install-body" data-i18n="installBody">Tocca Condividi e poi Aggiungi alla schermata Home.</p>
+      <p id="install-body" data-i18n="installBody">Tocca Condividi e scegli Aggiungi alla schermata Home.</p>
     </div>
+    <button id="install-action" class="install-action" type="button" data-i18n="installHow">Come si fa</button>
     <button id="install-close" class="icon-button" type="button" data-i18n-aria="installClose" aria-label="Chiudi">×</button>
+  </div>
+
+  <div id="install-help" class="modal" role="dialog" aria-modal="true" aria-labelledby="install-help-title" aria-describedby="install-help-body" hidden>
+    <div class="modal-card">
+      <h2 id="install-help-title" data-i18n="installHelpTitle">Aggiungi alla schermata Home</h2>
+      <p id="install-help-body" class="install-help-body"></p>
+      <button id="install-help-ok" class="resume" type="button">OK</button>
+    </div>
   </div>
 
   <div id="watch-menu" class="modal" role="dialog" aria-modal="true" aria-labelledby="watch-title" aria-describedby="watch-subtitle" hidden>
@@ -150,6 +159,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=91"></script>
+  <script src="app.js?v=92"></script>
 </body>
 </html>
