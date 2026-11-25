@@ -4,7 +4,6 @@
 
 const VIX = 'https://vixsrc.to';
 const VLC_STORE = 'https://apps.apple.com/app/vlc-media-player/id650377962';
-const INFUSE_STORE = 'https://apps.apple.com/app/infuse/id1136220934';
 const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1';
 
 async function showError(message) {
@@ -36,10 +35,7 @@ async function resolve(input) {
     throw new Error('Token non trovato nella pagina embed (' + html.length + ' caratteri).');
   }
 
-  // cf=1: flusso che VLC/Safari riproducono (segmenti text/html).
-  // cf=0: segmenti video/mp2t, tentativo per Infuse.
-  const base = master[1] + '?token=' + token[1] + '&expires=' + expires[1] + '&asn=';
-  return { hls: base + '&cf=1', mp2t: base + '&cf=0' };
+  return master[1] + '?token=' + token[1] + '&expires=' + expires[1] + '&asn=&cf=1';
 }
 
 function openAppOrStore(url, store) {
@@ -57,35 +53,27 @@ async function main() {
   }
   if (!input) input = Pasteboard.paste();
 
-  const urls = await resolve(input);
-  const finalUrl = urls.hls;
+  const finalUrl = await resolve(input);
 
   const alert = new Alert();
   alert.title = 'Moviesrc';
   alert.message = 'Scegli come aprire il film';
   alert.addAction('Safari (AirPlay)');
   alert.addAction('VLC');
-  alert.addAction('Infuse');
   alert.addAction('Installa VLC');
-  alert.addAction('Installa Infuse');
   alert.addAction('Copia link');
   alert.addCancelAction('Annulla');
   const choice = await alert.present();
 
   const vlcUrl = 'vlc-x-callback://x-callback-url/stream?url=' + encodeURIComponent(finalUrl);
-  const infuseUrl = 'infuse://x-callback-url/play?url=' + encodeURIComponent(urls.mp2t);
 
   if (choice === 0) {
     Safari.open(finalUrl);
   } else if (choice === 1) {
     openAppOrStore(vlcUrl, VLC_STORE);
   } else if (choice === 2) {
-    openAppOrStore(infuseUrl, INFUSE_STORE);
-  } else if (choice === 3) {
     Safari.open(VLC_STORE);
-  } else if (choice === 4) {
-    Safari.open(INFUSE_STORE);
-  } else if (choice === 5) {
+  } else if (choice === 3) {
     Pasteboard.copy(finalUrl);
   }
 }
