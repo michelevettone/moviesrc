@@ -2,7 +2,7 @@ const PAGE_SIZE = 48;
 const IMG_CARD = 'https://image.tmdb.org/t/p/w185';
 const IMG_DETAIL = 'https://image.tmdb.org/t/p/w342';
 const VIX = 'vixsrc.to';
-const VIDFAST = 'vidfast.vc';
+const VIDSRC = 'vidsrc.sh';
 const VIDLINK = 'vidlink.pro';
 const FILMEZ = 'filmez.club';
 const WORKER = 'https://moviesrc.michelevettone.com';
@@ -61,7 +61,7 @@ const I18N = {
     error: 'Errore',
     untitled: 'Senza titolo',
     footer1: 'Catalogo aggiornato automaticamente ogni giorno.',
-    footer2: 'Fonti: vixsrc (italiano), VidFast/VidLink (inglese) e Filmez (film, solo italiano). I link si aprono in una nuova scheda.',
+    footer2: 'Fonti: vixsrc (italiano), vidsrc (inglese), VidLink (alternativa inglese) e Filmez (film, solo italiano). I link si aprono in una nuova scheda.',
   },
   en: {
     title: 'moviesrc — movies and TV shows',
@@ -92,6 +92,7 @@ const I18N = {
     enSoon: 'English catalog is being prepared. Try again shortly.',
     watch: '▶ Watch ↗',
     vidlink: '▶ VidLink ↗',
+    vidlinkLoading: 'VidLink',
     details: '▶ Details',
     trailer: '▶ Trailer',
     episodes: '▶ Episodes',
@@ -111,7 +112,7 @@ const I18N = {
     error: 'Error',
     untitled: 'Untitled',
     footer1: 'Catalog refreshed automatically every day.',
-    footer2: 'Sources: vixsrc (Italian), VidFast/VidLink (English) and Filmez (movies, Italian only). Links open in a new tab.',
+    footer2: 'Sources: vixsrc (Italian), vidsrc (English), VidLink (English alternative) and Filmez (movies, Italian only). Links open in a new tab.',
   },
 };
 
@@ -334,13 +335,13 @@ function renderRecent() {
 function providerUrl(item) {
   if (item.mediaType === 'tv') return `#tv/${item.tmdb_id}`;
   if (state.lang === 'it') return `https://${VIX}/movie/${item.imdb_id || item.tmdb_id}?lang=it`;
-  return `https://${VIDFAST}/movie/${item.tmdb_id}`;
+  return `https://${VIDSRC}/embed/movie/${item.tmdb_id}`;
 }
 
 function episodeUrl(showId, season, episode) {
   return state.lang === 'it'
     ? `https://${VIX}/tv/${showId}/${season}/${episode}?lang=it`
-    : `https://${VIDFAST}/tv/${showId}/${season}/${episode}`;
+    : `https://${VIDSRC}/embed/tv/${showId}/${season}/${episode}`;
 }
 
 // Condivide il link con la shortcut iOS: niente copia/incolla.
@@ -350,6 +351,27 @@ function playWithShortcut(url) {
     return;
   }
   location.href = `shortcuts://run-shortcut?name=Moviesrc&input=text&text=${encodeURIComponent(url)}`;
+}
+
+const VIDLINK_CACHE = new Map();
+
+async function vidlinkAvailable(item) {
+  const id = String(item.tmdb_id);
+  if (VIDLINK_CACHE.has(id)) return VIDLINK_CACHE.get(id);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(`${WORKER}/providers/movie/${id}`, { signal: controller.signal });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const available = data.vidlink === true;
+    VIDLINK_CACHE.set(id, available);
+    return available;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 const FILMEZ_CACHE = new Map();
@@ -670,6 +692,9 @@ async function showDetail(id) {
   els.detailFilmez.textContent = '';
   els.detailVidlink.hidden = true;
   els.detailVidlink.removeAttribute('href');
+  els.detailVidlink.removeAttribute('aria-busy');
+  els.detailVidlink.removeAttribute('aria-disabled');
+  els.detailVidlink.classList.remove('is-loading');
   els.detailVidlink.textContent = '';
   els.seasons.replaceChildren();
   window.scrollTo({ top: 0 });
@@ -844,6 +869,9 @@ async function showMovieDetail(id) {
   els.detailFilmez.textContent = '';
   els.detailVidlink.hidden = true;
   els.detailVidlink.removeAttribute('href');
+  els.detailVidlink.removeAttribute('aria-busy');
+  els.detailVidlink.removeAttribute('aria-disabled');
+  els.detailVidlink.classList.remove('is-loading');
   els.detailVidlink.textContent = '';
   els.detailLast.hidden = true;
   els.detailResume.hidden = true;
@@ -913,8 +941,28 @@ async function showMovieDetail(id) {
 
     if (item && state.lang === 'en') {
       els.detailVidlink.hidden = false;
-      els.detailVidlink.href = `https://${VIDLINK}/movie/${item.tmdb_id}`;
-      els.detailVidlink.textContent = t('vidlink');
+      els.detailVidlink.removeAttribute('href');
+      els.detailVidlink.setAttribute('aria-busy', 'true');
+      els.detailVidlink.setAttribute('aria-disabled', 'true');
+      els.detailVidlink.classList.add('is-loading');
+      const spinner = document.createElement('span');
+      spinner.className = 'spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      els.detailVidlink.textContent = t('vidlinkLoading');
+      els.detailVidlink.append(spinner);
+      vidlinkAvailable(item).then(available => {
+        if (state.detailId !== movieKey) return;
+        els.detailVidlink.classList.remove('is-loading');
+        els.detailVidlink.removeAttribute('aria-busy');
+        els.detailVidlink.removeAttribute('aria-disabled');
+        if (!available) {
+          els.detailVidlink.hidden = true;
+          els.detailVidlink.textContent = '';
+          return;
+        }
+        els.detailVidlink.href = `https://${VIDLINK}/movie/${item.tmdb_id}`;
+        els.detailVidlink.textContent = t('vidlink');
+      });
     }
 
     els.detailOverview.hidden = false;
@@ -1006,7 +1054,7 @@ document.addEventListener('click', event => {
   const link = event.target.closest('a[href]');
   if (!link) return;
   const href = link.getAttribute('href');
-  if (!href || !/^https:\/\/(vixsrc\.to|vidfast\.(vc|pro)|vidlink\.pro|filmez\.club)\//.test(href)) return;
+  if (!href || !/^https:\/\/(vixsrc\.to|vidsrc\.sh|vidlink\.pro|filmez\.club)\//.test(href)) return;
   const browser = getBrowser();
   if (browser === 'system') return;
   if (browser === 'chrome' && /CriOS/.test(navigator.userAgent)) return;
